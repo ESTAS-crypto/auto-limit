@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Quota Radar: Rotasi, Manual</title>
+<link rel="stylesheet" href="../css/quota.css">
+<link rel="stylesheet" href="../css/quota2.css">
+
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@500;700&family=Inter:wght@400;500&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+.root{position:relative;width:390px;height:844px;overflow:hidden;box-sizing:border-box;background:#0C0E13;color:#E8EAF0;font-family:Inter,system-ui,sans-serif;padding:22px 18px 0}
+.bar{height:8px;border-radius:99px;background:#222836;overflow:hidden}
+.fill{height:100%;width:calc(var(--v)*1%);border-radius:99px;background:var(--c);transform-origin:left;animation:grow 1.5s cubic-bezier(.2,.8,.2,1) .4s both}
+.track{fill:none;stroke:#222836;stroke-width:6}
+.ring{fill:none;stroke:var(--c);stroke-width:6;stroke-linecap:round;stroke-dasharray:163.4;stroke-dashoffset:var(--o);transform:rotate(-90deg);transform-box:fill-box;transform-origin:center;animation:draw 1.7s cubic-bezier(.2,.8,.2,1) .3s both}
+@keyframes draw{from{stroke-dashoffset:163.4}}
+.rw{position:relative;flex:none}
+.rw b{position:absolute;inset:0;display:grid;place-items:center}
+.row{display:flex;justify-content:space-between;font-size:12px;color:#9AA1B2;margin-bottom:5px}
+.mc{padding:16px}
+.mc:hover{transform:none}
+.tbar{position:absolute;left:0;right:0;bottom:0;height:84px;box-sizing:border-box;padding:10px 12px 0;display:flex;justify-content:space-around;background:#12151C;border-top:1px solid #232834}
+.tb{display:grid;justify-items:center;align-content:center;gap:4px;min-width:72px;height:56px;border-radius:14px;font-size:11px;color:#9AA1B2;transition:all .3s cubic-bezier(.2,.8,.2,1)}
+.tb:hover{color:#E8EAF0}
+.tb[aria-current="page"]{color:#4ADE9A;background:rgba(74,222,154,.1)}
+.av{width:42px;height:42px;border-radius:13px;display:grid;place-items:center;background:color-mix(in srgb,var(--c) 16%,transparent);color:var(--c);font-size:13px;flex:none}
+.pill{padding:10px 16px;border-radius:99px;background:#14171F;border:1px solid #232834;color:#9AA1B2;font-size:13px;white-space:nowrap}
+.pill[aria-pressed="true"]{background:#E8EAF0;color:#0C0E13;border-color:#E8EAF0}
+.tk{width:46px;height:46px;border-radius:50%;flex:none;display:grid;place-items:center;font-size:13px;color:var(--c);background:color-mix(in srgb,var(--c) 14%,transparent);border:2px solid var(--c)}
+.tk.sk{border-color:#3A4254;color:#6B7385;background:none;text-decoration:line-through}
+.tk.sm{width:34px;height:34px;font-size:11px}
+.fl{flex:1;height:2px;margin:0 6px;background:repeating-linear-gradient(90deg,#4ADE9A 0 6px,transparent 6px 12px);background-size:12px 2px;animation:mv 1s linear infinite}
+@keyframes mv{to{background-position:12px 0}}
+.rg{-webkit-appearance:none;appearance:none;width:100%;height:28px;margin:10px 0 0;border-radius:99px;background:linear-gradient(90deg,#F5B544 var(--p),#222836 var(--p)) center/100% 8px no-repeat;cursor:pointer}
+.rg::-webkit-slider-thumb{-webkit-appearance:none;width:28px;height:28px;border-radius:50%;background:#4ADE9A;border:4px solid #0C0E13;box-shadow:0 0 0 2px #4ADE9A}
+.rg::-moz-range-thumb{width:20px;height:20px;border-radius:50%;background:#4ADE9A;border:4px solid #0C0E13;box-shadow:0 0 0 2px #4ADE9A}
+.rd{width:26px;height:26px;border-radius:50%;border:2px solid #3A4254;display:grid;place-items:center;flex:none;color:#07110C}
+.rd.on{background:#4ADE9A;border-color:#4ADE9A}
+.dim{opacity:.4}
+.picked{border-color:#4ADE9A !important}
+
+.seg{margin-top:18px}
+</style>
+
+<style>html,body{background:#0C0E13}</style>
+</head>
+<body>
+
+
+<div class="root">
+<div class="rise" style="display:flex;justify-content:space-between;align-items:flex-start"><div><h1 class="h1" style="font-size:32px">Rotasi akun</h1><div class="sub" style="margin-top:4px">Kapan dan ke mana berpindah.</div></div><span class="chip" style="--c:#4ADE9A"><i class="dot"></i>Manual</span></div><div class="seg2 rise" style="--n:3;--i:2;margin-top:18px"><input type="radio" name="g1" id="g1_0"><label for="g1_0">Otomatis</label><input type="radio" name="g1" id="g1_1" checked><label for="g1_1">Manual</label><input type="radio" name="g1" id="g1_2"><label for="g1_2">Hybrid</label><i class="ind"></i></div><div class="card rise mc" style="--i:3;--c:#F5B544;margin-top:14px"><div style="display:flex;gap:12px;align-items:center"><i class="stk stk-warn" style="width:56px;height:56px"></i><div><div class="t" style="color:#F5B544">akun-03 tinggal 12%</div><div class="sub">Belum ganti akun.</div></div></div><button class="btn pri flash" style="width:100%;justify-content:center;min-height:46px;margin-top:12px"><span class="l"><i class="ic ic-loop"></i>Ganti ke akun-05</span><span class="c" aria-hidden="true"><i class="ic ic-check"></i>Berpindah</span></button></div><div class="t rise" style="--i:4;margin:16px 2px 10px">Pilih akun aktif</div><div style="display:grid;gap:8px"><div class="card rise  " style="--i:5;--c:#4ADE9A;padding:10px 14px;display:flex;align-items:center;gap:12px"><span class="tk mono sm" style="--c:#4ADE9A">05</span><div style="flex:1;min-width:0"><div class="mono" style="font-size:13px">akun-05@gmail.com</div><div class="sub">Ultra · Claude 100%</div></div><span class="rd"></span></div><div class="card rise  " style="--i:6;--c:#4ADE9A;padding:10px 14px;display:flex;align-items:center;gap:12px"><span class="tk mono sm" style="--c:#4ADE9A">01</span><div style="flex:1;min-width:0"><div class="mono" style="font-size:13px">akun-01@gmail.com</div><div class="sub">Pro · Claude 82%</div></div><span class="rd"></span></div><div class="card rise picked " style="--i:7;--c:#F5B544;padding:10px 14px;display:flex;align-items:center;gap:12px"><span class="tk mono sm" style="--c:#F5B544">03</span><div style="flex:1;min-width:0"><div class="mono" style="font-size:13px">akun-03@gmail.com</div><div class="sub">Pro · Claude 12%</div></div><span class="rd on"><i class="ic ic-check" style="width:16px;height:16px"></i></span></div><div class="card rise  dim" style="--i:8;--c:#FF7A7A;padding:10px 14px;display:flex;align-items:center;gap:12px"><span class="tk mono sm" style="--c:#FF7A7A">04</span><div style="flex:1;min-width:0"><div class="mono" style="font-size:13px">akun-04@gmail.com</div><div class="sub">Pro · reset 2j 14m</div></div><span class="rd"></span></div></div><div class="sub rise" style="--i:9;display:flex;align-items:center;gap:8px;margin:14px 2px 0"><i class="ic ic-pause" style="width:16px;height:16px"></i>Rotasi otomatis dimatikan</div>
+<nav class="tbar" aria-label="Menu utama"><a class="tb" href="#"><i class="ic ic-radar" style="width:24px;height:24px"></i>Dashboard</a><a class="tb" href="#"><i class="ic ic-stack" style="width:24px;height:24px"></i>Akun</a><a class="tb" href="#"><i class="ic ic-bell" style="width:24px;height:24px"></i>Notif</a><a class="tb" href="#" aria-current="page"><i class="ic ic-loop" style="width:24px;height:24px"></i>Rotasi</a></nav>
+</div>
+
+</body>
+</html>

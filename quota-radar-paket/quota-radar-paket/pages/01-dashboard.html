@@ -1,0 +1,159 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Quota Radar: Dashboard</title>
+<link rel="stylesheet" href="../css/quota.css">
+<link rel="stylesheet" href="../css/quota2.css">
+
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@500;700&family=Inter:wght@400;500&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+button{font:inherit;cursor:pointer;border:0}
+.mono{font-family:'JetBrains Mono',monospace}
+.disp{font-family:'Bricolage Grotesque',sans-serif}
+.rise{opacity:0;animation:rise .9s cubic-bezier(.2,.8,.2,1) forwards;animation-delay:calc(var(--i,0)*70ms)}
+@keyframes rise{from{opacity:0;transform:translateY(20px) scale(.98)}to{opacity:1;transform:none}}
+.card{background:#14171F;border:1px solid #232834;border-radius:20px;transition:transform .4s cubic-bezier(.2,.8,.2,1),border-color .4s,box-shadow .4s}
+.card:hover{transform:translateY(-5px);border-color:#3A4254;box-shadow:0 22px 44px -20px rgba(0,0,0,.8)}
+.sub{font-size:13px;color:#9AA1B2}
+.row{display:flex;justify-content:space-between;font-size:13px;color:#9AA1B2;margin-bottom:6px}
+.bar{height:8px;border-radius:99px;background:#222836;overflow:hidden}
+.fill{position:relative;overflow:hidden;height:100%;width:calc(var(--v)*1%);border-radius:99px;background:var(--c);transform-origin:left;animation:grow 1.5s cubic-bezier(.2,.8,.2,1) .4s both}
+.fill::after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,transparent,rgba(255,255,255,.4),transparent);transform:translateX(-100%);animation:sheen 3.4s ease-in-out 2s infinite}
+@keyframes grow{from{transform:scaleX(0)}to{transform:scaleX(1)}}
+@keyframes sheen{to{transform:translateX(100%)}}
+.track{fill:none;stroke:#222836;stroke-width:6}
+.ring{fill:none;stroke:var(--c);stroke-width:6;stroke-linecap:round;stroke-dasharray:163.4;stroke-dashoffset:var(--o);transform:rotate(-90deg);transform-box:fill-box;transform-origin:center;animation:draw 1.7s cubic-bezier(.2,.8,.2,1) .3s both}
+@keyframes draw{from{stroke-dashoffset:163.4}}
+.rw{position:relative;width:64px;height:64px;flex:none}
+.rw b{position:absolute;inset:0;display:grid;place-items:center;font-size:15px;color:#E8EAF0}
+.chip{display:inline-flex;align-items:center;gap:8px;padding:5px 12px;border-radius:99px;font-size:12px;font-weight:500;color:var(--c);background:color-mix(in srgb,var(--c) 14%,transparent);white-space:nowrap}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--c);animation:ping 2.2s infinite;flex:none}
+@keyframes ping{0%{box-shadow:0 0 0 0 var(--c)}70%,100%{box-shadow:0 0 0 8px transparent}}
+.sweep{transform-origin:50% 50%;animation:spin 3.6s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.hot{animation:rise .9s cubic-bezier(.2,.8,.2,1) forwards,glow 2.8s ease-in-out infinite;animation-delay:calc(var(--i,0)*70ms),0s}
+@keyframes glow{50%{box-shadow:0 0 0 1px rgba(255,122,122,.4),0 0 36px -8px rgba(255,122,122,.4)}}
+.tab{padding:9px 16px;border-radius:99px;background:#14171F;color:#9AA1B2;font-size:14px;border:1px solid #232834;transition:all .3s cubic-bezier(.2,.8,.2,1)}
+.tab:hover{color:#E8EAF0;border-color:#3A4254;transform:translateY(-2px)}
+.tab[aria-pressed="true"]{background:#E8EAF0;color:#0C0E13;border-color:#E8EAF0}
+.btn{padding:11px 18px;border-radius:12px;font-weight:500;font-size:14px;transition:transform .3s cubic-bezier(.2,.8,.2,1),box-shadow .3s}
+.btn:hover{transform:translateY(-2px);box-shadow:0 10px 24px -10px rgba(74,222,154,.6)}
+.btn:active{transform:scale(.97)}
+.sw{width:46px;height:26px;border-radius:99px;background:#4ADE9A;position:relative;flex:none}
+.sw i{position:absolute;top:3px;left:23px;width:20px;height:20px;border-radius:50%;background:#07110C;transition:left .3s cubic-bezier(.2,.8,.2,1)}
+.sw:hover i{left:21px}
+.feed{display:flex;gap:12px;font-size:13px;color:#9AA1B2;line-height:1.45}
+.feed i{width:8px;height:8px;border-radius:50%;background:var(--c);margin-top:6px;flex:none}
+.feed b{display:block;color:#E8EAF0;font-weight:500}
+@media (max-width:1000px){
+.main{grid-template-columns:1fr !important}
+}
+@media (prefers-reduced-motion:reduce){
+*{animation-duration:.01ms !important;animation-delay:0s !important}
+}
+</style>
+
+<style>html,body{background:#0C0E13}</style>
+</head>
+<body>
+
+
+<div class="pg" style="min-height:1120px;box-sizing:border-box;background:#0C0E13;color:#E8EAF0;font-family:Inter,system-ui,sans-serif;padding:28px 32px 56px">
+<div style="max-width:1280px;margin:0 auto">
+
+<div class="rise" style="display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap">
+<div class="brand disp"><i class="logo"></i>Quota Radar</div>
+<nav class="nav" aria-label="Menu utama"><a class="nv" href="#" aria-current="page"><i class="ic ic-radar"></i>Dashboard</a><a class="nv" href="#"><i class="ic ic-stack"></i>Akun</a><a class="nv" href="#"><i class="ic ic-bell"></i>Notifikasi</a><a class="nv" href="#"><i class="ic ic-loop"></i>Rotasi</a></nav>
+<div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+<span class="chip" style="--c:#4ADE9A"><i class="dot"></i>Live · sinkron&nbsp;<span class="tick"></span></span>
+<button class="btn" style="background:#14171F;color:#E8EAF0;border:1px solid #232834"><i class="ic ic-chat"></i>Hubungkan Discord</button>
+<button class="btn" style="background:#4ADE9A;color:#07110C"><i class="ic ic-plus"></i>Tambah akun</button>
+</div>
+</div>
+
+<div class="rise" style="--i:2;margin-top:44px">
+<h1 class="disp" style="margin:0;font-size:56px;line-height:1.02;letter-spacing:-.03em;font-weight:700">Semua akun, satu layar.</h1>
+<p class="sub" style="font-size:17px;margin:14px 0 0;max-width:620px;line-height:1.5">Pantau sisa kuota Antigravity tiap akun Google dan langsung tahu kapan harus ganti. Data di bawah hanya contoh.</p>
+</div>
+
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px;margin-top:32px">
+<div class="card rise" style="--i:3;padding:20px"><div class="sub" style="display:flex;align-items:center;gap:8px"><i class="ic ic-stack"></i>Total akun</div><div class="mono cnt" style="font-size:44px;margin-top:6px;--to:6"><span class="vh">6</span></div></div>
+<div class="card rise" style="--i:4;padding:20px"><div class="sub" style="display:flex;align-items:center;gap:8px"><i class="ic ic-check" style="color:#4ADE9A"></i>Siap dipakai</div><div class="mono cnt" style="font-size:44px;margin-top:6px;color:#4ADE9A;--to:3"><span class="vh">3</span></div></div>
+<div class="card rise" style="--i:5;padding:20px"><div class="sub" style="display:flex;align-items:center;gap:8px"><i class="ic ic-clock" style="color:#F5B544"></i>Hampir limit</div><div class="mono cnt" style="font-size:44px;margin-top:6px;color:#F5B544;--to:1"><span class="vh">1</span></div></div>
+<div class="card rise" style="--i:6;padding:20px"><div class="sub" style="display:flex;align-items:center;gap:8px"><i class="ic ic-bolt" style="color:#FF7A7A"></i>Kena limit</div><div class="mono cnt" style="font-size:44px;margin-top:6px;color:#FF7A7A;--to:2"><span class="vh">2</span></div></div>
+</div>
+
+<div class="main" style="display:grid;grid-template-columns:1fr 340px;gap:24px;margin-top:32px;align-items:start">
+<div>
+<div class="rise" style="--i:7;display:flex;gap:10px;flex-wrap:wrap;margin-bottom:18px">
+<input type="radio" class="pf" name="pm" id="pm_0" checked><label class="tab" for="pm_0">Semua · 6</label><input type="radio" class="pf" name="pm" id="pm_1"><label class="tab" for="pm_1">Aktif · 3</label><input type="radio" class="pf" name="pm" id="pm_2"><label class="tab" for="pm_2">Hampir limit · 1</label><input type="radio" class="pf" name="pm" id="pm_3"><label class="tab" for="pm_3">Limit · 2</label></div>
+<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(330px,1fr));gap:16px">
+
+<div class="card rise ld" style="--i:8;--c:#4ADE9A;padding:20px">
+<div style="display:flex;justify-content:space-between;align-items:center;gap:10px"><div style="min-width:0"><div class="mono" style="font-size:14px">akun-05@gmail.com</div><div class="sub">Ultra · dipakai sekarang</div></div><span class="chip"><i class="dot"></i>Aktif</span></div>
+<div style="display:flex;gap:18px;align-items:center;margin-top:18px"><div class="rw"><svg width="64" height="64" viewBox="0 0 64 64" role="img" aria-label="Sisa kuota 100 persen"><circle class="track" cx="32" cy="32" r="26"/><circle class="ring" cx="32" cy="32" r="26" style="--o:0"/></svg><b class="mono">100</b></div>
+<div style="flex:1;display:grid;gap:12px"><div><div class="row"><span>Claude Opus</span><span class="mono">100% · reset 03:15</span></div><div class="bar"><div class="fill" style="--v:100;--c:#4ADE9A"></div></div></div><div><div class="row"><span>Gemini Pro</span><span class="mono">100% · reset 02:45</span></div><div class="bar"><div class="fill" style="--v:100;--c:#4ADE9A"></div></div></div></div></div>
+</div>
+
+<div class="card rise ld" style="--i:9;--c:#4ADE9A;padding:20px">
+<div style="display:flex;justify-content:space-between;align-items:center;gap:10px"><div style="min-width:0"><div class="mono" style="font-size:14px">akun-01@gmail.com</div><div class="sub">Pro · token 38 mnt</div></div><span class="chip"><i class="dot"></i>Aktif</span></div>
+<div style="display:flex;gap:18px;align-items:center;margin-top:18px"><div class="rw"><svg width="64" height="64" viewBox="0 0 64 64" role="img" aria-label="Sisa kuota 82 persen"><circle class="track" cx="32" cy="32" r="26"/><circle class="ring" cx="32" cy="32" r="26" style="--o:29.4"/></svg><b class="mono">82</b></div>
+<div style="flex:1;display:grid;gap:12px"><div><div class="row"><span>Claude Opus</span><span class="mono">82% · reset 02:23</span></div><div class="bar"><div class="fill" style="--v:82;--c:#4ADE9A"></div></div></div><div><div class="row"><span>Gemini Pro</span><span class="mono">95% · reset 01:22</span></div><div class="bar"><div class="fill" style="--v:95;--c:#4ADE9A"></div></div></div></div></div>
+</div>
+
+<div class="card rise ld" style="--i:10;--c:#4ADE9A;padding:20px">
+<div style="display:flex;justify-content:space-between;align-items:center;gap:10px"><div style="min-width:0"><div class="mono" style="font-size:14px">akun-02@gmail.com</div><div class="sub">Pro · token 52 mnt</div></div><span class="chip"><i class="dot"></i>Aktif</span></div>
+<div style="display:flex;gap:18px;align-items:center;margin-top:18px"><div class="rw"><svg width="64" height="64" viewBox="0 0 64 64" role="img" aria-label="Sisa kuota 41 persen"><circle class="track" cx="32" cy="32" r="26"/><circle class="ring" cx="32" cy="32" r="26" style="--o:96.4"/></svg><b class="mono">41</b></div>
+<div style="flex:1;display:grid;gap:12px"><div><div class="row"><span>Claude Opus</span><span class="mono">41% · reset 04:00</span></div><div class="bar"><div class="fill" style="--v:41;--c:#4ADE9A"></div></div></div><div><div class="row"><span>Gemini Pro</span><span class="mono">70% · reset 03:30</span></div><div class="bar"><div class="fill" style="--v:70;--c:#4ADE9A"></div></div></div></div></div>
+</div>
+
+<div class="card rise ld" style="--i:11;--c:#F5B544;padding:20px">
+<div style="display:flex;justify-content:space-between;align-items:center;gap:10px"><div style="min-width:0"><div class="mono" style="font-size:14px">akun-03@gmail.com</div><div class="sub">Pro · token 20 mnt</div></div><span class="chip"><i class="dot"></i>Hampir limit</span></div>
+<div style="display:flex;gap:18px;align-items:center;margin-top:18px"><div class="rw"><svg width="64" height="64" viewBox="0 0 64 64" role="img" aria-label="Sisa kuota 12 persen"><circle class="track" cx="32" cy="32" r="26"/><circle class="ring" cx="32" cy="32" r="26" style="--o:143.8"/></svg><b class="mono">12</b></div>
+<div style="flex:1;display:grid;gap:12px"><div><div class="row"><span>Claude Opus</span><span class="mono">12% · reset 01:05</span></div><div class="bar"><div class="fill" style="--v:12;--c:#F5B544"></div></div></div><div><div class="row"><span>Gemini Pro</span><span class="mono">38% · reset 00:50</span></div><div class="bar"><div class="fill" style="--v:38;--c:#F5B544"></div></div></div></div></div>
+</div>
+
+<div class="card hot rise ld" style="--i:12;--c:#FF7A7A;padding:20px;border-color:#4A2A2E">
+<div style="display:flex;justify-content:space-between;align-items:center;gap:10px"><div style="min-width:0"><div class="mono" style="font-size:14px">akun-04@gmail.com</div><div class="sub">Pro · reset 2j 14m</div></div><span class="chip"><i class="dot"></i>Limit</span></div>
+<div style="display:flex;gap:18px;align-items:center;margin-top:18px"><div class="rw"><svg width="64" height="64" viewBox="0 0 64 64" role="img" aria-label="Sisa kuota 0 persen"><circle class="track" cx="32" cy="32" r="26"/><circle class="ring" cx="32" cy="32" r="26" style="--o:163.4"/></svg><b class="mono">0</b></div>
+<div style="flex:1;display:grid;gap:12px"><div><div class="row"><span>Claude Opus</span><span class="mono">Habis · reset 02:14</span></div><div class="bar"><div class="fill" style="--v:0;--c:#FF7A7A"></div></div></div><div><div class="row"><span>Gemini Pro</span><span class="mono">55% · reset 02:14</span></div><div class="bar"><div class="fill" style="--v:55;--c:#FF7A7A"></div></div></div></div></div>
+</div>
+
+<div class="card hot rise ld" style="--i:13;--c:#FF7A7A;padding:20px;border-color:#4A2A2E">
+<div style="display:flex;justify-content:space-between;align-items:center;gap:10px"><div style="min-width:0"><div class="mono" style="font-size:14px">akun-06@gmail.com</div><div class="sub">Free · reset 4j 40m</div></div><span class="chip"><i class="dot"></i>Limit</span></div>
+<div style="display:flex;gap:18px;align-items:center;margin-top:18px"><div class="rw"><svg width="64" height="64" viewBox="0 0 64 64" role="img" aria-label="Sisa kuota 0 persen"><circle class="track" cx="32" cy="32" r="26"/><circle class="ring" cx="32" cy="32" r="26" style="--o:163.4"/></svg><b class="mono">0</b></div>
+<div style="flex:1;display:grid;gap:12px"><div><div class="row"><span>Claude Opus</span><span class="mono">Habis · reset 04:40</span></div><div class="bar"><div class="fill" style="--v:0;--c:#FF7A7A"></div></div></div><div><div class="row"><span>Gemini Pro</span><span class="mono">Habis · reset 04:40</span></div><div class="bar"><div class="fill" style="--v:0;--c:#FF7A7A"></div></div></div></div></div>
+</div>
+
+</div>
+</div>
+
+<div style="display:grid;gap:16px">
+<div class="card rise ld" style="--i:8;--c:#4ADE9A;padding:22px">
+<div style="display:flex;justify-content:space-between;align-items:center"><div class="sub">Rekomendasi sekarang</div><i class="stk stk-ok" style="width:60px;height:60px"></i></div>
+<div class="disp" style="font-size:26px;font-weight:700;letter-spacing:-.02em;margin-top:6px">akun-05 paling siap</div>
+<p class="sub" style="margin:8px 0 18px;line-height:1.5">Claude 100% dan Gemini 100%. Ganti sebelum akun-03 habis.</p>
+<button class="btn flash" style="width:100%;background:#4ADE9A;color:#07110C"><span class="l"><i class="ic ic-loop"></i>Ganti ke akun ini</span><span class="c" aria-hidden="true"><i class="ic ic-check"></i>Berpindah</span></button>
+<div style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:20px;padding-top:18px;border-top:1px solid #232834"><div><div style="font-size:14px;font-weight:500">Rotasi otomatis</div><div class="sub">Lewati akun di bawah 5%</div></div><label class="sw2"><input type="checkbox" role="switch" aria-label="Rotasi otomatis" checked><i></i></label></div>
+</div>
+
+<div class="card rise" style="--i:9;padding:22px">
+<div style="display:flex;justify-content:space-between;align-items:center;gap:10px"><div style="font-size:15px;font-weight:500">Notifikasi Discord</div><span class="chip" style="--c:#4ADE9A">Terhubung</span></div>
+<div class="sub mono" style="margin:6px 0 18px">#quota-alert</div>
+<div style="display:grid;gap:16px">
+<div class="feed" style="--c:#FF7A7A"><i></i><span><b>akun-04 kena limit Claude</b>2 menit lalu</span></div>
+<div class="feed" style="--c:#F5B544"><i></i><span><b>akun-03 tersisa 12%</b>18 menit lalu</span></div>
+<div class="feed" style="--c:#4ADE9A"><i></i><span><b>akun-02 pulih ke 41%</b>1 jam lalu</span></div>
+</div>
+</div>
+</div>
+</div>
+
+</div>
+</div>
+
+</body>
+</html>

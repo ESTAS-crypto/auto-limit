@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="id"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Quota Radar: galeri mockup</title>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@500;700&family=Inter:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box}body{margin:0;display:grid;grid-template-columns:290px 1fr;height:100vh;background:#0C0E13;color:#E8EAF0;font-family:Inter,system-ui,sans-serif}
+aside{border-right:1px solid #232834;padding:22px 16px;overflow:auto;background:#12151C}
+h1{font:700 22px 'Bricolage Grotesque',sans-serif;letter-spacing:-.02em;margin:0 8px 4px}
+p{margin:0 8px 18px;font-size:13px;color:#9AA1B2;line-height:1.5}
+h2{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:#9AA1B2;margin:20px 8px 8px}
+button{display:block;width:100%;text-align:left;padding:10px 12px;border:0;border-radius:10px;background:none;color:#9AA1B2;font:inherit;font-size:14px;cursor:pointer;transition:all .3s cubic-bezier(.2,.8,.2,1)}
+button:hover{color:#E8EAF0;background:#1B1F2A;transform:translateX(3px)}
+button[aria-current="true"]{background:#4ADE9A;color:#07110C;font-weight:500}
+main{overflow:auto;padding:24px;display:flex;justify-content:center;align-items:flex-start}
+#box{position:relative;border:1px solid #232834;border-radius:16px;overflow:hidden;background:#0C0E13;box-shadow:0 30px 60px -30px #000}
+iframe{border:0;transform-origin:0 0;display:block}
+.bar{position:fixed;right:20px;bottom:16px;font-size:12px;color:#9AA1B2}
+.bar a{color:#4ADE9A}
+</style></head><body>
+<aside><h1>Quota Radar</h1><p>Galeri mockup. Klik halaman di bawah, atau pakai tombol panah atas dan bawah.</p><div id="nav"></div></aside>
+<main><div id="box"><iframe id="f" title="Mockup"></iframe></div></main>
+<div class="bar"><a id="open" target="_blank" rel="noopener">Buka halaman ini sendiri</a></div>
+<script>
+const items=[{"f": "01-dashboard", "t": "Dashboard", "k": "D", "w": 1440, "h": 1120}, {"f": "02-akun", "t": "Akun", "k": "D", "w": 1440, "h": 900}, {"f": "03-tambah-akun-langkah-1", "t": "Tambah akun, langkah 1", "k": "D", "w": 1440, "h": 900}, {"f": "04-tambah-akun-langkah-2", "t": "Tambah akun, langkah 2", "k": "D", "w": 1440, "h": 900}, {"f": "05-tambah-akun-langkah-3", "t": "Tambah akun, langkah 3", "k": "D", "w": 1440, "h": 900}, {"f": "06-notifikasi", "t": "Notifikasi", "k": "D", "w": 1440, "h": 940}, {"f": "07-rotasi-hybrid", "t": "Rotasi, Hybrid", "k": "D", "w": 1440, "h": 980}, {"f": "08-rotasi-otomatis", "t": "Rotasi, Otomatis", "k": "D", "w": 1440, "h": 980}, {"f": "09-rotasi-manual", "t": "Rotasi, Manual", "k": "D", "w": 1440, "h": 980}, {"f": "10-ikon-dan-stiker", "t": "Ikon dan stiker", "k": "D", "w": 1440, "h": 820}, {"f": "hp-01-dashboard", "t": "Dashboard", "k": "H", "w": 390, "h": 844}, {"f": "hp-02-akun", "t": "Akun", "k": "H", "w": 390, "h": 844}, {"f": "hp-03-notifikasi", "t": "Notifikasi", "k": "H", "w": 390, "h": 844}, {"f": "hp-04-rotasi-hybrid", "t": "Rotasi, Hybrid", "k": "H", "w": 390, "h": 844}, {"f": "hp-05-rotasi-otomatis", "t": "Rotasi, Otomatis", "k": "H", "w": 390, "h": 844}, {"f": "hp-06-rotasi-manual", "t": "Rotasi, Manual", "k": "H", "w": 390, "h": 844}];
+const nav=document.getElementById('nav'),f=document.getElementById('f'),box=document.getElementById('box'),main=document.querySelector('main'),open_=document.getElementById('open');
+let cur=0;
+[['D','Desktop'],['H','HP']].forEach(([k,name])=>{const h=document.createElement('h2');h.textContent=name;nav.appendChild(h);
+items.forEach((it,i)=>{if(it.k!==k)return;const b=document.createElement('button');b.textContent=it.t;b.onclick=()=>sel(i);b.dataset.i=i;nav.appendChild(b)})});
+function sel(i){cur=i;const it=items[i];
+nav.querySelectorAll('button').forEach(b=>b.setAttribute('aria-current',b.dataset.i==i));
+const s=Math.min(1,(main.clientWidth-48)/it.w);
+f.src='pages/'+it.f+'.html';f.width=it.w;f.height=it.h;f.style.transform='scale('+s+')';
+box.style.width=it.w*s+'px';box.style.height=it.h*s+'px';open_.href=f.src;location.hash=it.f}
+addEventListener('keydown',e=>{if(e.key==='ArrowDown'){e.preventDefault();sel((cur+1)%items.length)}if(e.key==='ArrowUp'){e.preventDefault();sel((cur-1+items.length)%items.length)}});
+addEventListener('resize',()=>sel(cur));
+sel(Math.max(0,items.findIndex(x=>x.f===location.hash.slice(1))));
+</script></body></html>

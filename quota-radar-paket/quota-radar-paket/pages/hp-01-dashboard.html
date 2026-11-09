@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Quota Radar: Dashboard</title>
+<link rel="stylesheet" href="../css/quota.css">
+<link rel="stylesheet" href="../css/quota2.css">
+
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@500;700&family=Inter:wght@400;500&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+.root{position:relative;width:390px;height:844px;overflow:hidden;box-sizing:border-box;background:#0C0E13;color:#E8EAF0;font-family:Inter,system-ui,sans-serif;padding:22px 18px 0}
+.bar{height:8px;border-radius:99px;background:#222836;overflow:hidden}
+.fill{height:100%;width:calc(var(--v)*1%);border-radius:99px;background:var(--c);transform-origin:left;animation:grow 1.5s cubic-bezier(.2,.8,.2,1) .4s both}
+.track{fill:none;stroke:#222836;stroke-width:6}
+.ring{fill:none;stroke:var(--c);stroke-width:6;stroke-linecap:round;stroke-dasharray:163.4;stroke-dashoffset:var(--o);transform:rotate(-90deg);transform-box:fill-box;transform-origin:center;animation:draw 1.7s cubic-bezier(.2,.8,.2,1) .3s both}
+@keyframes draw{from{stroke-dashoffset:163.4}}
+.rw{position:relative;flex:none}
+.rw b{position:absolute;inset:0;display:grid;place-items:center}
+.row{display:flex;justify-content:space-between;font-size:12px;color:#9AA1B2;margin-bottom:5px}
+.mc{padding:16px}
+.mc:hover{transform:none}
+.tbar{position:absolute;left:0;right:0;bottom:0;height:84px;box-sizing:border-box;padding:10px 12px 0;display:flex;justify-content:space-around;background:#12151C;border-top:1px solid #232834}
+.tb{display:grid;justify-items:center;align-content:center;gap:4px;min-width:72px;height:56px;border-radius:14px;font-size:11px;color:#9AA1B2;transition:all .3s cubic-bezier(.2,.8,.2,1)}
+.tb:hover{color:#E8EAF0}
+.tb[aria-current="page"]{color:#4ADE9A;background:rgba(74,222,154,.1)}
+.av{width:42px;height:42px;border-radius:13px;display:grid;place-items:center;background:color-mix(in srgb,var(--c) 16%,transparent);color:var(--c);font-size:13px;flex:none}
+.pill{padding:10px 16px;border-radius:99px;background:#14171F;border:1px solid #232834;color:#9AA1B2;font-size:13px;white-space:nowrap}
+.pill[aria-pressed="true"]{background:#E8EAF0;color:#0C0E13;border-color:#E8EAF0}
+</style>
+
+<style>html,body{background:#0C0E13}</style>
+</head>
+<body>
+
+
+<div class="root">
+<div class="rise" style="display:flex;align-items:center;justify-content:space-between"><div class="brand disp" style="font-size:20px"><i class="logo" style="width:34px;height:34px"></i>Quota Radar</div><span class="chip" style="--c:#4ADE9A"><i class="dot"></i>Live</span></div><div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:20px"><div class="card rise mc" style="--i:2;padding:14px"><div class="sub" style="display:flex;align-items:center;gap:7px"><i class="ic ic-stack" style="width:18px;height:18px;color:#E8EAF0"></i>Total</div><div class="mono cnt" style="font-size:30px;margin-top:4px;color:#E8EAF0;--to:6"><span class="vh">6</span></div></div><div class="card rise mc" style="--i:3;padding:14px"><div class="sub" style="display:flex;align-items:center;gap:7px"><i class="ic ic-check" style="width:18px;height:18px;color:#4ADE9A"></i>Siap</div><div class="mono cnt" style="font-size:30px;margin-top:4px;color:#4ADE9A;--to:3"><span class="vh">3</span></div></div><div class="card rise mc" style="--i:4;padding:14px"><div class="sub" style="display:flex;align-items:center;gap:7px"><i class="ic ic-clock" style="width:18px;height:18px;color:#F5B544"></i>Hampir limit</div><div class="mono cnt" style="font-size:30px;margin-top:4px;color:#F5B544;--to:1"><span class="vh">1</span></div></div><div class="card rise mc" style="--i:5;padding:14px"><div class="sub" style="display:flex;align-items:center;gap:7px"><i class="ic ic-bolt" style="width:18px;height:18px;color:#FF7A7A"></i>Kena limit</div><div class="mono cnt" style="font-size:30px;margin-top:4px;color:#FF7A7A;--to:2"><span class="vh">2</span></div></div></div><div class="rise" style="--i:6;display:flex;justify-content:space-between;align-items:center;margin:22px 2px 12px"><span class="t">Akun · 6</span><span class="sub">Data contoh</span></div><div style="display:grid;gap:10px"><div class="card rise mc ld" style="--i:7;--c:#4ADE9A"><div style="display:flex;justify-content:space-between;align-items:center;gap:8px"><div><div class="mono" style="font-size:13px">akun-05@gmail.com</div><div class="sub">Ultra · dipakai</div></div><span class="chip"><i class="dot"></i>Aktif</span></div><div style="display:flex;gap:14px;align-items:center;margin-top:12px"><div class="rw" style="width:56px;height:56px"><svg width="56" height="56" viewBox="0 0 64 64" role="img" aria-label="Sisa 100 persen"><circle class="track" cx="32" cy="32" r="26"/><circle class="ring" cx="32" cy="32" r="26" style="--o:0"/></svg><b class="mono" style="font-size:13px">100</b></div><div style="flex:1;display:grid;gap:9px"><div><div class="row"><span>Claude</span><span class="mono">100% · 03:15</span></div><div class="bar"><div class="fill" style="--v:100;--c:#4ADE9A"></div></div></div><div><div class="row"><span>Gemini</span><span class="mono">100% · 02:45</span></div><div class="bar"><div class="fill" style="--v:100;--c:#4ADE9A"></div></div></div></div></div></div><div class="card rise mc ld" style="--i:8;--c:#F5B544"><div style="display:flex;justify-content:space-between;align-items:center;gap:8px"><div><div class="mono" style="font-size:13px">akun-03@gmail.com</div><div class="sub">Pro</div></div><span class="chip"><i class="dot"></i>Hampir</span></div><div style="display:flex;gap:14px;align-items:center;margin-top:12px"><div class="rw" style="width:56px;height:56px"><svg width="56" height="56" viewBox="0 0 64 64" role="img" aria-label="Sisa 12 persen"><circle class="track" cx="32" cy="32" r="26"/><circle class="ring" cx="32" cy="32" r="26" style="--o:143.8"/></svg><b class="mono" style="font-size:13px">12</b></div><div style="flex:1;display:grid;gap:9px"><div><div class="row"><span>Claude</span><span class="mono">12% · 01:05</span></div><div class="bar"><div class="fill" style="--v:12;--c:#F5B544"></div></div></div><div><div class="row"><span>Gemini</span><span class="mono">38% · 00:50</span></div><div class="bar"><div class="fill" style="--v:38;--c:#F5B544"></div></div></div></div></div></div><div class="card rise mc ld" style="--i:9;--c:#FF7A7A"><div style="display:flex;justify-content:space-between;align-items:center;gap:8px"><div><div class="mono" style="font-size:13px">akun-04@gmail.com</div><div class="sub">Pro</div></div><span class="chip"><i class="dot"></i>Limit</span></div><div style="display:flex;gap:14px;align-items:center;margin-top:12px"><div class="rw" style="width:56px;height:56px"><svg width="56" height="56" viewBox="0 0 64 64" role="img" aria-label="Sisa 0 persen"><circle class="track" cx="32" cy="32" r="26"/><circle class="ring" cx="32" cy="32" r="26" style="--o:163.4"/></svg><b class="mono" style="font-size:13px">0</b></div><div style="flex:1;display:grid;gap:9px"><div><div class="row"><span>Claude</span><span class="mono">Habis · 02:14</span></div><div class="bar"><div class="fill" style="--v:0;--c:#FF7A7A"></div></div></div><div><div class="row"><span>Gemini</span><span class="mono">55% · 02:14</span></div><div class="bar"><div class="fill" style="--v:55;--c:#FF7A7A"></div></div></div></div></div></div></div>
+<nav class="tbar" aria-label="Menu utama"><a class="tb" href="#" aria-current="page"><i class="ic ic-radar" style="width:24px;height:24px"></i>Dashboard</a><a class="tb" href="#"><i class="ic ic-stack" style="width:24px;height:24px"></i>Akun</a><a class="tb" href="#"><i class="ic ic-bell" style="width:24px;height:24px"></i>Notif</a><a class="tb" href="#"><i class="ic ic-loop" style="width:24px;height:24px"></i>Rotasi</a></nav>
+</div>
+
+</body>
+</html>

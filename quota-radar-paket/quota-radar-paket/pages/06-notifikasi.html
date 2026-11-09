@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Quota Radar: Notifikasi</title>
+<link rel="stylesheet" href="../css/quota.css">
+<link rel="stylesheet" href="../css/quota2.css">
+
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@500;700&family=Inter:wght@400;500&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+</style>
+
+<style>html,body{background:#0C0E13}</style>
+</head>
+<body>
+
+
+<div class="pg" style="min-height:940px"><div class="wrap">
+<div class="top rise"><div class="brand disp"><i class="logo"></i>Quota Radar</div><nav class="nav" aria-label="Menu utama"><a class="nv" href="#"><i class="ic ic-radar"></i>Dashboard</a><a class="nv" href="#"><i class="ic ic-stack"></i>Akun</a><a class="nv" href="#" aria-current="page"><i class="ic ic-bell"></i>Notifikasi</a><a class="nv" href="#"><i class="ic ic-loop"></i>Rotasi</a></nav></div>
+<div class="rise" style="--i:2;display:flex;justify-content:space-between;align-items:flex-end;gap:16px;flex-wrap:wrap;margin-top:40px"><div><h1 class="h1">Notifikasi Discord</h1><p class="sub p">Dapat kabar di Discord tiap ada akun yang hampir atau sudah kena limit.</p></div></div><div class="two"><div style="display:grid;gap:16px"><div class="card rise" style="--i:3;padding:26px"><div style="display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:18px"><div class="t">Webhook</div><span class="chip" style="--c:#4ADE9A"><i class="dot"></i>Terhubung</span></div><label class="lbl" for="wh">URL webhook Discord</label><input class="in mono" id="wh" placeholder="[URL WEBHOOK]"><div style="display:flex;gap:12px;margin-top:20px"><button class="btn pri flash"><span class="l"><i class="ic ic-chat"></i>Tes kirim</span><span class="c" aria-hidden="true"><i class="ic ic-check"></i>Terkirim</span></button><button class="btn flash"><span class="l">Simpan</span><span class="c" aria-hidden="true"><i class="ic ic-check"></i>Tersimpan</span></button></div></div><div class="card rise" style="--i:4;padding:8px 26px"><div class="t" style="padding:18px 0 4px">Kapan dikirim</div><div class="opt"><div><div class="t">Kuota hampir habis</div><div class="sub">Kirim saat sisa di bawah ambang</div></div><label class="sw2"><input type="checkbox" role="switch" aria-label="Kuota hampir habis" checked><i></i></label></div><div class="opt"><div><div class="t">Akun kena limit</div><div class="sub">Kirim saat sisa kuota 0%</div></div><label class="sw2"><input type="checkbox" role="switch" aria-label="Akun kena limit" checked><i></i></label></div><div class="opt"><div><div class="t">Akun pulih</div><div class="sub">Kirim saat kuota kembali setelah reset</div></div><label class="sw2"><input type="checkbox" role="switch" aria-label="Akun pulih" checked><i></i></label></div><div class="opt"><div><div class="t">Ringkasan harian</div><div class="sub">Rekap semua akun tiap pagi</div></div><label class="sw2"><input type="checkbox" role="switch" aria-label="Ringkasan harian"><i></i></label></div></div></div><div class="card rise" style="--i:5;padding:22px;background:#1E2128"><div class="sub" style="margin-bottom:16px">Pratinjau pesan</div><div style="display:flex;gap:12px"><i class="logo" style="width:40px;height:40px;flex:none;animation:none"></i><div style="flex:1"><div style="display:flex;gap:8px;align-items:center"><b style="font-size:15px">Quota Radar</b><span class="chip" style="--c:#7C8CFF;padding:2px 8px;font-size:11px">BOT</span></div><div style="margin-top:10px;padding:16px;border-radius:12px;background:#2A2E37;display:grid;gap:12px"><div class="t" style="color:#FF7A7A">akun-04 kena limit</div><div class="sub">Claude Opus habis. Reset dalam 2j 14m.</div><div style="display:flex;gap:24px"><div><div class="sub">Gemini</div><div class="mono">55%</div></div><div><div class="sub">Disarankan</div><div class="mono">akun-05</div></div></div></div></div></div></div></div>
+</div></div>
+
+</body>
+</html>

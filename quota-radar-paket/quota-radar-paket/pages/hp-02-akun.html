@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Quota Radar: Akun</title>
+<link rel="stylesheet" href="../css/quota.css">
+<link rel="stylesheet" href="../css/quota2.css">
+
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@500;700&family=Inter:wght@400;500&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+.root{position:relative;width:390px;height:844px;overflow:hidden;box-sizing:border-box;background:#0C0E13;color:#E8EAF0;font-family:Inter,system-ui,sans-serif;padding:22px 18px 0}
+.bar{height:8px;border-radius:99px;background:#222836;overflow:hidden}
+.fill{height:100%;width:calc(var(--v)*1%);border-radius:99px;background:var(--c);transform-origin:left;animation:grow 1.5s cubic-bezier(.2,.8,.2,1) .4s both}
+.track{fill:none;stroke:#222836;stroke-width:6}
+.ring{fill:none;stroke:var(--c);stroke-width:6;stroke-linecap:round;stroke-dasharray:163.4;stroke-dashoffset:var(--o);transform:rotate(-90deg);transform-box:fill-box;transform-origin:center;animation:draw 1.7s cubic-bezier(.2,.8,.2,1) .3s both}
+@keyframes draw{from{stroke-dashoffset:163.4}}
+.rw{position:relative;flex:none}
+.rw b{position:absolute;inset:0;display:grid;place-items:center}
+.row{display:flex;justify-content:space-between;font-size:12px;color:#9AA1B2;margin-bottom:5px}
+.mc{padding:16px}
+.mc:hover{transform:none}
+.tbar{position:absolute;left:0;right:0;bottom:0;height:84px;box-sizing:border-box;padding:10px 12px 0;display:flex;justify-content:space-around;background:#12151C;border-top:1px solid #232834}
+.tb{display:grid;justify-items:center;align-content:center;gap:4px;min-width:72px;height:56px;border-radius:14px;font-size:11px;color:#9AA1B2;transition:all .3s cubic-bezier(.2,.8,.2,1)}
+.tb:hover{color:#E8EAF0}
+.tb[aria-current="page"]{color:#4ADE9A;background:rgba(74,222,154,.1)}
+.av{width:42px;height:42px;border-radius:13px;display:grid;place-items:center;background:color-mix(in srgb,var(--c) 16%,transparent);color:var(--c);font-size:13px;flex:none}
+.pill{padding:10px 16px;border-radius:99px;background:#14171F;border:1px solid #232834;color:#9AA1B2;font-size:13px;white-space:nowrap}
+.pill[aria-pressed="true"]{background:#E8EAF0;color:#0C0E13;border-color:#E8EAF0}
+.scr,[style*="overflow-x:auto"]{scrollbar-width:none;-ms-overflow-style:none}
+.scr::-webkit-scrollbar,[style*="overflow-x:auto"]::-webkit-scrollbar{display:none}
+</style>
+
+<style>html,body{background:#0C0E13}</style>
+</head>
+<body>
+
+
+<div class="root">
+<div class="rise" style="--i:1"><h1 class="h1" style="font-size:34px">Akun</h1><div class="sub" style="margin-top:4px">6 akun · 3 siap dipakai</div></div><div class="rise" style="--i:2;display:flex;gap:8px;margin:16px 0;overflow-x:auto"><input type="radio" class="pf" name="p1" id="p1_0" checked><label class="pill" for="p1_0">Semua · 6</label><input type="radio" class="pf" name="p1" id="p1_1"><label class="pill" for="p1_1">Aktif · 3</label><input type="radio" class="pf" name="p1" id="p1_2"><label class="pill" for="p1_2">Hampir · 1</label><input type="radio" class="pf" name="p1" id="p1_3"><label class="pill" for="p1_3">Limit · 2</label></div><div class="card rise mc" style="--i:4;--c:#F5B544;border-color:#4A4130"><div style="display:flex;justify-content:space-between;align-items:center;gap:8px"><div><div class="sub">Dipilih</div><div class="mono" style="font-size:14px;margin-top:2px">akun-03@gmail.com</div></div><span class="chip"><i class="dot"></i>Hampir limit</span></div><div style="display:flex;gap:16px;align-items:center;margin-top:14px"><div class="rw" style="width:72px;height:72px"><svg width="72" height="72" viewBox="0 0 64 64" role="img" aria-label="Sisa 12 persen"><circle class="track" cx="32" cy="32" r="26"/><circle class="ring" cx="32" cy="32" r="26" style="--o:143.8"/></svg><b class="mono" style="font-size:16px">12</b></div><div style="flex:1;display:grid;gap:10px"><div><div class="row"><span>Claude</span><span class="mono">12% · 01:05</span></div><div class="bar"><div class="fill" style="--v:12;--c:#F5B544"></div></div></div><div><div class="row"><span>Gemini</span><span class="mono">38% · 00:50</span></div><div class="bar"><div class="fill" style="--v:38;--c:#F5B544"></div></div></div></div></div><div style="display:flex;gap:10px;margin-top:16px"><button class="btn pri flash" style="flex:1;justify-content:center;min-height:46px"><span class="l"><i class="ic ic-loop"></i>Pakai sekarang</span><span class="c" aria-hidden="true"><i class="ic ic-check"></i>Dipakai</span></button><button class="btn" style="min-height:46px;justify-content:center"><i class="ic ic-pause"></i>Jeda</button></div></div><div class="sub rise" style="--i:5;margin:18px 2px 10px">Akun lain</div><div style="display:grid;gap:8px"><div class="card rise" style="--i:6;--c:#4ADE9A;padding:10px 14px;display:flex;align-items:center;gap:12px"><div class="rw" style="width:44px;height:44px"><svg width="44" height="44" viewBox="0 0 64 64" role="img" aria-label="Sisa 100 persen"><circle class="track" cx="32" cy="32" r="26"/><circle class="ring" cx="32" cy="32" r="26" style="--o:0"/></svg><b class="mono" style="font-size:11px">100</b></div><div style="flex:1;min-width:0"><div class="mono" style="font-size:13px">akun-05@gmail.com</div><div class="sub">Ultra · Claude 100%</div></div><span class="chip"><i class="dot"></i>Aktif</span></div><div class="card rise" style="--i:7;--c:#4ADE9A;padding:10px 14px;display:flex;align-items:center;gap:12px"><div class="rw" style="width:44px;height:44px"><svg width="44" height="44" viewBox="0 0 64 64" role="img" aria-label="Sisa 82 persen"><circle class="track" cx="32" cy="32" r="26"/><circle class="ring" cx="32" cy="32" r="26" style="--o:29.4"/></svg><b class="mono" style="font-size:11px">82</b></div><div style="flex:1;min-width:0"><div class="mono" style="font-size:13px">akun-01@gmail.com</div><div class="sub">Pro · Claude 82%</div></div><span class="chip"><i class="dot"></i>Aktif</span></div><div class="card rise" style="--i:8;--c:#FF7A7A;padding:10px 14px;display:flex;align-items:center;gap:12px"><div class="rw" style="width:44px;height:44px"><svg width="44" height="44" viewBox="0 0 64 64" role="img" aria-label="Sisa 0 persen"><circle class="track" cx="32" cy="32" r="26"/><circle class="ring" cx="32" cy="32" r="26" style="--o:163.4"/></svg><b class="mono" style="font-size:11px">0</b></div><div style="flex:1;min-width:0"><div class="mono" style="font-size:13px">akun-04@gmail.com</div><div class="sub">Pro · reset 2j 14m</div></div><span class="chip"><i class="dot"></i>Limit</span></div></div><button class="btn pri rise" style="--i:9;position:absolute;right:18px;bottom:98px;min-height:52px;padding:0 22px;border-radius:99px;box-shadow:0 14px 30px -10px rgba(74,222,154,.6)"><i class="ic ic-plus"></i>Tambah akun</button>
+<nav class="tbar" aria-label="Menu utama"><a class="tb" href="#"><i class="ic ic-radar" style="width:24px;height:24px"></i>Dashboard</a><a class="tb" href="#" aria-current="page"><i class="ic ic-stack" style="width:24px;height:24px"></i>Akun</a><a class="tb" href="#"><i class="ic ic-bell" style="width:24px;height:24px"></i>Notif</a><a class="tb" href="#"><i class="ic ic-loop" style="width:24px;height:24px"></i>Rotasi</a></nav>
+</div>
+
+</body>
+</html>

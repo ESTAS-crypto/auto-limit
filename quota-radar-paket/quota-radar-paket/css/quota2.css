@@ -1,0 +1,50 @@
+@property --cn{syntax:'<integer>';initial-value:0;inherits:false}
+@property --t{syntax:'<integer>';initial-value:0;inherits:false}
+.cnt{--cn:0;counter-reset:n var(--cn);animation:cnt 1.6s cubic-bezier(.2,.8,.2,1) .5s forwards}
+.cnt::after{content:counter(n)}
+@keyframes cnt{to{--cn:var(--to)}}
+.vh{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+.tick{counter-reset:t var(--t);animation:tk 30s steps(30,end) infinite}
+.tick::after{content:counter(t) " dtk lalu"}
+@keyframes tk{to{--t:30}}
+.sw2{display:block;width:46px;height:26px;border-radius:99px;background:#2A3040;position:relative;flex:none;transition:background .35s;cursor:pointer}
+.sw2 input{position:absolute;inset:0;width:100%;height:100%;margin:0;opacity:0;cursor:pointer}
+.sw2 i{position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:50%;background:#9AA1B2;transition:left .4s cubic-bezier(.2,.9,.3,1.3),background .35s,width .2s}
+.sw2:has(input:checked){background:#4ADE9A}
+.sw2:has(input:checked) i{left:23px;background:#07110C}
+.sw2:active i{width:26px}
+.sw2:has(input:checked):active i{left:17px}
+.sw2:has(input:focus-visible),.seg2:has(input:focus-visible){outline:2px solid #E8EAF0;outline-offset:3px}
+.seg2{position:relative;display:grid;grid-template-columns:repeat(var(--n),1fr);padding:5px;background:#0C0E13;border:1px solid #232834;border-radius:14px}
+.seg2 input{position:absolute;opacity:0;width:1px;height:1px}
+.seg2 label{position:relative;z-index:1;padding:11px 4px;text-align:center;font-size:14px;color:#9AA1B2;cursor:pointer;border-radius:10px;transition:color .3s}
+.seg2 label:hover{color:#E8EAF0}
+.seg2 input:checked+label{color:#07110C;font-weight:500}
+.seg2 .ind{position:absolute;top:5px;bottom:5px;left:5px;width:calc((100% - 10px)/var(--n));border-radius:10px;background:#4ADE9A;transition:transform .5s cubic-bezier(.2,.9,.3,1.25)}
+.seg2:has(input:nth-of-type(2):checked) .ind{transform:translateX(100%)}
+.seg2:has(input:nth-of-type(3):checked) .ind{transform:translateX(200%)}
+.pf{position:absolute;opacity:0;width:1px;height:1px}
+label.pill,label.tab{cursor:pointer;display:inline-block;transition:all .3s cubic-bezier(.2,.8,.2,1)}
+.pf:checked+label{background:#E8EAF0;color:#0C0E13;border-color:#E8EAF0;animation:pop2 .45s cubic-bezier(.2,1.5,.4,1)}
+.pf:focus-visible+label{outline:2px solid #4ADE9A;outline-offset:2px}
+@keyframes pop2{50%{transform:scale(1.1)}}
+.flash{display:inline-grid !important;justify-items:center}
+.flash>span{grid-area:1/1;display:inline-flex;align-items:center;justify-content:center;gap:8px}
+.flash .c{opacity:0}
+.flash:focus .l,.flash:active .l{animation:lo 2.4s both}
+.flash:focus .c,.flash:active .c{animation:ci 2.4s both}
+@keyframes lo{0%{opacity:1}8%,88%{opacity:0;transform:translateY(-10px)}100%{opacity:1;transform:none}}
+@keyframes ci{0%{opacity:0;transform:translateY(10px)}8%,88%{opacity:1;transform:none}100%{opacity:0}}
+.ld{position:relative;overflow:hidden}
+.ld::after{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;background:linear-gradient(100deg,#14171F 30%,#222836 50%,#14171F 70%) 0 0/250% 100% #14171F;animation:ldx 1.4s ease-in-out .15s both}
+@keyframes ldx{0%{background-position:100% 0;opacity:1}70%{background-position:-50% 0;opacity:1}100%{background-position:-50% 0;opacity:0;visibility:hidden}}
+.pg,.root{animation:enter .8s cubic-bezier(.2,.8,.2,1) both}
+@keyframes enter{from{opacity:0;filter:blur(10px);transform:scale(.985)}}
+.fl{flex:1;height:2px;margin:0 6px;background:repeating-linear-gradient(90deg,#4ADE9A 0 6px,transparent 6px 12px);background-size:12px 2px;animation:mv 1s linear infinite}
+@keyframes mv{to{background-position:12px 0}}
+.qb{height:8px;border-radius:99px;background:#222836;overflow:hidden}
+.qt{fill:none;stroke:#222836;stroke-width:6}
+.qr{fill:none;stroke:var(--c);stroke-width:6;stroke-linecap:round;stroke-dasharray:163.4;stroke-dashoffset:var(--o);transform:rotate(-90deg);transform-box:fill-box;transform-origin:center;animation:qdraw 1.7s cubic-bezier(.2,.8,.2,1) .3s both}
+@keyframes qdraw{from{stroke-dashoffset:163.4}}
+.qw{position:relative;flex:none}
+.qw b{position:absolute;inset:0;display:grid;place-items:center}

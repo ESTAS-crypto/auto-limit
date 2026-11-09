@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Quota Radar: Rotasi, Otomatis</title>
+<link rel="stylesheet" href="../css/quota.css">
+<link rel="stylesheet" href="../css/quota2.css">
+
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@500;700&family=Inter:wght@400;500&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+.tk{width:46px;height:46px;border-radius:50%;flex:none;display:grid;place-items:center;font-size:13px;color:var(--c);background:color-mix(in srgb,var(--c) 14%,transparent);border:2px solid var(--c)}
+.tk.sk{border-color:#3A4254;color:#6B7385;background:none;text-decoration:line-through}
+.tk.sm{width:34px;height:34px;font-size:11px}
+.fl{flex:1;height:2px;margin:0 6px;background:repeating-linear-gradient(90deg,#4ADE9A 0 6px,transparent 6px 12px);background-size:12px 2px;animation:mv 1s linear infinite}
+@keyframes mv{to{background-position:12px 0}}
+.rg{-webkit-appearance:none;appearance:none;width:100%;height:28px;margin:10px 0 0;border-radius:99px;background:linear-gradient(90deg,#F5B544 var(--p),#222836 var(--p)) center/100% 8px no-repeat;cursor:pointer}
+.rg::-webkit-slider-thumb{-webkit-appearance:none;width:28px;height:28px;border-radius:50%;background:#4ADE9A;border:4px solid #0C0E13;box-shadow:0 0 0 2px #4ADE9A}
+.rg::-moz-range-thumb{width:20px;height:20px;border-radius:50%;background:#4ADE9A;border:4px solid #0C0E13;box-shadow:0 0 0 2px #4ADE9A}
+.rd{width:26px;height:26px;border-radius:50%;border:2px solid #3A4254;display:grid;place-items:center;flex:none;color:#07110C}
+.rd.on{background:#4ADE9A;border-color:#4ADE9A}
+.dim{opacity:.4}
+.picked{border-color:#4ADE9A !important}
+</style>
+
+<style>html,body{background:#0C0E13}</style>
+</head>
+<body>
+
+
+<div class="pg" style="min-height:980px"><div class="wrap">
+<div class="top rise"><div class="brand disp"><i class="logo"></i>Quota Radar</div><nav class="nav" aria-label="Menu utama"><a class="nv" href="#"><i class="ic ic-radar"></i>Dashboard</a><a class="nv" href="#"><i class="ic ic-stack"></i>Akun</a><a class="nv" href="#"><i class="ic ic-bell"></i>Notifikasi</a><a class="nv" href="#" aria-current="page"><i class="ic ic-loop"></i>Rotasi</a></nav></div>
+<div class="rise" style="--i:2;display:flex;justify-content:space-between;align-items:flex-end;gap:16px;flex-wrap:wrap;margin-top:40px"><div><h1 class="h1">Rotasi akun</h1><p class="sub p">Atur kapan dan ke akun mana Quota Radar berpindah.</p></div></div><div class="two"><div style="display:grid;gap:16px"><div class="card rise" style="--i:3;padding:26px"><div class="t" style="margin-bottom:14px">Mode</div><div class="seg2" style="--n:3"><input type="radio" name="g1" id="g1_0" checked><label for="g1_0">Otomatis</label><input type="radio" name="g1" id="g1_1"><label for="g1_1">Manual</label><input type="radio" name="g1" id="g1_2"><label for="g1_2">Hybrid</label><i class="ind"></i></div><p class="sub" style="margin:14px 0 0">Otomatis: Quota Radar memilih dan memindah akun sendiri. Kamu tidak perlu melakukan apa-apa.</p></div><div class="card rise" style="--i:4;padding:26px"><div class="t">Cara kerja</div><div style="display:flex;align-items:flex-start;margin-top:22px"><div style="display:grid;justify-items:center;gap:10px;text-align:center;width:130px"><span class="tk" style="--c:#4ADE9A;width:56px;height:56px"><i class="ic ic-clock"></i></span><span class="sub">Cek kuota sebelum tiap permintaan</span></div><i class="fl" style="margin-top:27px"></i><div style="display:grid;justify-items:center;gap:10px;text-align:center;width:130px"><span class="tk" style="--c:#4ADE9A;width:56px;height:56px"><i class="ic ic-radar"></i></span><span class="sub">Pilih akun terbaik</span></div><i class="fl" style="margin-top:27px"></i><div style="display:grid;justify-items:center;gap:10px;text-align:center;width:130px"><span class="tk" style="--c:#4ADE9A;width:56px;height:56px"><i class="ic ic-loop"></i></span><span class="sub">Pindah otomatis</span></div></div></div><div class="card rise" style="--i:5;padding:26px"><div style="display:flex;justify-content:space-between;align-items:baseline"><label class="t" for="th">Lewati akun di bawah</label><span class="mono" style="font-size:32px;color:#F5B544">5%</span></div><input id="th" class="rg" type="range" min="0" max="50" value="5" style="--p:10%"><div class="sub" style="margin-top:8px">Akun di bawah ambang tidak dipakai sampai kuotanya reset.</div></div></div><div style="display:grid;gap:16px"><div class="card rise" style="--i:6;--c:#4ADE9A;padding:24px;display:flex;gap:16px;align-items:center"><i class="stk stk-ok"></i><div><div class="sub">Akun aktif sekarang</div><div class="mono" style="font-size:15px;margin:2px 0 6px">akun-05@gmail.com</div><span class="chip"><i class="dot"></i>Aman</span></div></div><div class="card rise" style="--i:7;padding:8px 26px"><div class="t" style="padding:18px 0 4px">Riwayat perpindahan</div><div class="opt"><div><div class="t">akun-04 ke akun-05</div><div class="sub">Claude habis</div></div><span class="mono sub">09:41</span></div><div class="opt"><div><div class="t">akun-01 ke akun-04</div><div class="sub">Di bawah 5%</div></div><span class="mono sub">08:12</span></div><div class="opt"><div><div class="t">akun-02 ke akun-01</div><div class="sub">Di bawah 5%</div></div><span class="mono sub">Kemarin</span></div></div></div></div>
+</div></div>
+
+</body>
+</html>

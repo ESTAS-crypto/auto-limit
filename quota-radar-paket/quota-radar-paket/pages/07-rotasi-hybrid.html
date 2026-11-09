@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Quota Radar: Rotasi, Hybrid</title>
+<link rel="stylesheet" href="../css/quota.css">
+<link rel="stylesheet" href="../css/quota2.css">
+
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@500;700&family=Inter:wght@400;500&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+</style>
+
+<style>html,body{background:#0C0E13}</style>
+</head>
+<body>
+
+
+<div class="pg" style="min-height:980px"><div class="wrap">
+<div class="top rise"><div class="brand disp"><i class="logo"></i>Quota Radar</div><nav class="nav" aria-label="Menu utama"><a class="nv" href="#"><i class="ic ic-radar"></i>Dashboard</a><a class="nv" href="#"><i class="ic ic-stack"></i>Akun</a><a class="nv" href="#"><i class="ic ic-bell"></i>Notifikasi</a><a class="nv" href="#" aria-current="page"><i class="ic ic-loop"></i>Rotasi</a></nav></div>
+<div class="rise" style="--i:2;display:flex;justify-content:space-between;align-items:flex-end;gap:16px;flex-wrap:wrap;margin-top:40px"><div><h1 class="h1">Rotasi akun</h1><p class="sub p">Atur kapan dan ke akun mana Quota Radar berpindah.</p></div></div><div class="two"><div style="display:grid;gap:16px"><div class="card rise" style="--i:3;padding:26px"><div class="t" style="margin-bottom:14px">Mode</div><div class="seg2" style="--n:3"><input type="radio" name="g1" id="g1_0"><label for="g1_0">Otomatis</label><input type="radio" name="g1" id="g1_1"><label for="g1_1">Manual</label><input type="radio" name="g1" id="g1_2" checked><label for="g1_2">Hybrid</label><i class="ind"></i></div><p class="sub" style="margin:14px 0 0">Hybrid: pindah otomatis, tapi kamu tetap bisa memilih sendiri.</p></div><div class="card rise" style="--i:4;padding:26px"><div style="display:flex;justify-content:space-between;align-items:baseline"><label class="t" for="th">Lewati akun di bawah</label><span class="mono" style="font-size:32px;color:#F5B544">5%</span></div><input id="th" type="range" min="0" max="50" value="5" style="width:100%;margin:18px 0 6px;accent-color:#4ADE9A"><div class="sub">Akun di bawah ambang ini tidak dipakai sampai kuotanya reset.</div></div><div class="card rise" style="--i:5;padding:8px 26px"><div class="t" style="padding:18px 0 4px">Urutan prioritas</div><i class="fl" style="display:block;flex:none;margin:8px 0 4px"></i><div class="opt"><span class="mono" style="color:#4ADE9A">1</span><span class="t" style="flex:1">Ultra</span><span class="sub">paling dulu</span></div><div class="opt"><span class="mono" style="color:#4ADE9A">2</span><span class="t" style="flex:1">Pro</span><span class="sub">kuota terbanyak</span></div><div class="opt"><span class="mono" style="color:#4ADE9A">3</span><span class="t" style="flex:1">Free</span><span class="sub">paling akhir</span></div></div></div><div class="card rise" style="--i:6;--c:#FF7A7A;padding:26px;display:grid;gap:16px;justify-items:start"><i class="stk stk-sleep" style="width:120px;height:120px"></i><div class="t">Kalau semua akun habis</div><div class="sub">Quota Radar berhenti dan memberi tahu kamu di Discord.</div><span class="chip"><i class="ic ic-clock" style="width:16px;height:16px"></i>Reset tercepat: akun-04, 2j 14m</span></div></div>
+</div></div>
+
+</body>
+</html>
