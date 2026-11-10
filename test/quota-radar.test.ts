@@ -81,6 +81,50 @@ describe('Unit Tests: Status Akun (calculateAccountStatus)', () => {
     expect(result.status).toBe('aktif');
     expect(result.lowest_pct).toBe(100);
   });
+
+  it('harus memakai nilai Claude saja bila Gemini null/tidak tersedia dari server', () => {
+    // Skenario akun Google free: Gemini tidak ada di server, Claude 100%
+    const resultAktif = calculateAccountStatus({
+      paused: false,
+      tracked_models: ['claude', 'gemini'],
+      claude_pct: 100,
+      gemini_pct: null,
+    });
+    expect(resultAktif.status).toBe('aktif');
+    expect(resultAktif.lowest_pct).toBe(100);
+
+    // Skenario Claude 0% dan Gemini null
+    const resultLimit = calculateAccountStatus({
+      paused: false,
+      tracked_models: ['claude', 'gemini'],
+      claude_pct: 0,
+      gemini_pct: null,
+    });
+    expect(resultLimit.status).toBe('limit');
+    expect(resultLimit.lowest_pct).toBe(0);
+  });
+
+  it('harus memperhitungkan nilai Gemini mingguan jika diisi manual', () => {
+    // Skenario evanatharasya: Claude 100% dari server, Gemini 0% dari isian manual IDE
+    const resultManualLimit = calculateAccountStatus({
+      paused: false,
+      tracked_models: ['claude', 'gemini'],
+      claude_pct: 100,
+      gemini_pct: 0, // 0 dari manual
+    });
+    expect(resultManualLimit.status).toBe('limit');
+    expect(resultManualLimit.lowest_pct).toBe(0);
+
+    // Skenario testercoba98: Claude 100%, Gemini 61% dari manual
+    const resultManualAktif = calculateAccountStatus({
+      paused: false,
+      tracked_models: ['claude', 'gemini'],
+      claude_pct: 100,
+      gemini_pct: 61,
+    });
+    expect(resultManualAktif.status).toBe('aktif');
+    expect(resultManualAktif.lowest_pct).toBe(61);
+  });
 });
 
 describe('Unit Tests: Algoritma Pemilihan Akun Terbaik (selectBestAccount)', () => {

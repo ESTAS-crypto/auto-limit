@@ -533,7 +533,7 @@ export default function TambahAkunPage() {
                     <Ring value={geminiPct} size={90} strokeWidth={7} />
                     <div className="t font-medium mt-1 text-sm">Gemini (mingguan)</div>
                     <div className="sub text-xs">
-                      {geminiPct !== null ? `${geminiPct}% sisa real` : 'Tidak diketahui'}
+                      {geminiPct !== null ? `${geminiPct}% sisa real` : 'Tidak tersedia dari server'}
                     </div>
                   </div>
 
@@ -541,10 +541,19 @@ export default function TambahAkunPage() {
                     <Ring value={claudePct} size={90} strokeWidth={7} />
                     <div className="t font-medium mt-1 text-sm">Claude dan GPT (mingguan)</div>
                     <div className="sub text-xs">
-                      {claudePct !== null ? `${claudePct}% sisa real` : 'Tidak diketahui'}
+                      {claudePct !== null ? `${claudePct}% sisa real` : 'Tidak tersedia'}
                     </div>
                   </div>
                 </div>
+
+                {geminiPct === null && (
+                  <div className="mt-4 p-3 rounded-xl bg-surface/30 border border-border text-xs text-text-sub flex items-start gap-2">
+                    <Icon name="radar" size={16} className="text-blue-400 mt-0.5 shrink-0" />
+                    <span>
+                      Kuota mingguan Gemini tidak disediakan oleh API server. Status akun saat ini dihitung dari Claude. Anda dapat memasukkan nilai Gemini secara manual dari halaman <strong>Akun</strong> (menu <em>Sesuaikan</em>) sesuai yang tertera di IDE Antigravity Anda.
+                    </span>
+                  </div>
+                )}
 
                 <div className="flex gap-3 mt-7 flex-wrap">
                   <Link href="/" className="btn pri">

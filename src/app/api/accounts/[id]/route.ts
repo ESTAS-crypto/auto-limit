@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { togglePauseAccount, saveQuotaSnapshot, getServerSupabase } from '@/lib/supabase';
+import { togglePauseAccount, saveQuotaSnapshot, getServerSupabase, updateAccountManualGemini } from '@/lib/supabase';
 import { executeWhitelistedAction } from '@/lib/rotation';
 
 export const dynamic = 'force-dynamic';
@@ -15,7 +15,28 @@ export async function PATCH(
       body = await req.json();
     } catch {}
 
-    // 1. Jika memperbarui kuota secara manual (Kalibrasi / Sync Kuota)
+    // 1. Isian Manual Gemini mingguan (dari IDE) per akun
+    if (body.gemini_manual_pct !== undefined || body.gemini_manual_clear === true) {
+      const val = body.gemini_manual_clear || body.gemini_manual_pct === null || body.gemini_manual_pct === ''
+        ? null
+        : Number(body.gemini_manual_pct);
+      const resetsAt = val !== null && body.gemini_manual_resets_at ? String(body.gemini_manual_resets_at) : null;
+
+      const updated = await updateAccountManualGemini(id, val, resetsAt);
+      if (!updated) {
+        return NextResponse.json({ ok: false, error: 'Akun tidak ditemukan' }, { status: 404 });
+      }
+
+      return NextResponse.json({
+        ok: true,
+        message: val !== null
+          ? 'Nilai Gemini mingguan (manual) berhasil disimpan'
+          : 'Nilai Gemini mingguan manual berhasil dibersihkan',
+        data: updated,
+      });
+    }
+
+    // 2. Jika memperbarui kuota secara manual (Kalibrasi / Sync Kuota snapshot)
     if (body.claude_pct !== undefined || body.gemini_pct !== undefined) {
       if (body.claude_pct !== undefined) {
         await saveQuotaSnapshot({
@@ -40,7 +61,7 @@ export async function PATCH(
       });
     }
 
-    // 2. Default: Toggle pause akun
+    // 3. Default: Toggle pause akun
     const updated = await togglePauseAccount(id);
     if (!updated) {
       return NextResponse.json({ ok: false, error: 'Akun tidak ditemukan' }, { status: 404 });

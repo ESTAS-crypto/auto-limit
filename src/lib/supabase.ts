@@ -302,26 +302,71 @@ export async function getAccountsWithStatus(): Promise<AccountWithStatus[]> {
       const { rows } = await pgPool.query('SELECT * FROM account_status;');
       const { rows: rotRows } = await pgPool.query('SELECT active_account_id FROM rotation_settings WHERE id = 1;');
       const activeId = rotRows[0]?.active_account_id;
+      const now = new Date();
 
-      return rows.map((row: any) => ({
-        id: row.account_id,
-        nickname: row.nickname,
-        email: row.email,
-        tier: row.tier,
-        paused: row.paused,
-        tracked_models: row.tracked_models,
-        in_rotation: row.in_rotation,
-        created_at: row.created_at,
-        claude_pct: row.claude_pct != null ? Number(row.claude_pct) : null,
-        claude_resets_at: row.claude_resets_at,
-        gemini_pct: row.gemini_pct != null ? Number(row.gemini_pct) : null,
-        gemini_resets_at: row.gemini_resets_at,
-        mingguan_pct: row.mingguan_pct != null ? Number(row.mingguan_pct) : null,
-        mingguan_resets_at: row.mingguan_resets_at,
-        lowest_tracked_pct: row.lowest_tracked_pct != null ? Number(row.lowest_tracked_pct) : null,
-        status: row.status,
-        is_active: row.account_id === activeId,
-      }));
+      return rows.map((row: any) => {
+        const hasManual = row.gemini_manual_pct != null && Number.isFinite(Number(row.gemini_manual_pct));
+        const isExpired = Boolean(
+          hasManual &&
+          row.gemini_manual_resets_at &&
+          !isNaN(new Date(row.gemini_manual_resets_at).getTime()) &&
+          new Date(row.gemini_manual_resets_at) <= now
+        );
+
+        let effectiveGeminiPct: number | null = null;
+        let effectiveGeminiResetsAt: string | null = null;
+        let geminiSource: 'server' | 'manual' | 'tidak_tersedia' = 'tidak_tersedia';
+
+        if (hasManual && !isExpired) {
+          effectiveGeminiPct = Number(row.gemini_manual_pct);
+          effectiveGeminiResetsAt = row.gemini_manual_resets_at;
+          geminiSource = 'manual';
+        } else if (row.gemini_pct != null && Number.isFinite(Number(row.gemini_pct))) {
+          effectiveGeminiPct = Number(row.gemini_pct);
+          effectiveGeminiResetsAt = row.gemini_resets_at;
+          geminiSource = 'server';
+        } else {
+          effectiveGeminiPct = null;
+          effectiveGeminiResetsAt = null;
+          geminiSource = 'tidak_tersedia';
+        }
+
+        const claudePct = row.claude_pct != null && Number.isFinite(Number(row.claude_pct)) ? Number(row.claude_pct) : null;
+
+        // Hitung status: jika Gemini kosong/tidak tersedia, hitung hanya dari Claude
+        const statusCalc = calculateAccountStatus({
+          paused: row.paused,
+          tracked_models: row.tracked_models,
+          claude_pct: claudePct,
+          gemini_pct: effectiveGeminiPct,
+        });
+
+        return {
+          id: row.account_id,
+          nickname: row.nickname,
+          email: row.email,
+          tier: row.tier,
+          paused: row.paused,
+          tracked_models: row.tracked_models,
+          in_rotation: row.in_rotation,
+          created_at: row.created_at,
+          gemini_manual_pct: row.gemini_manual_pct != null ? Number(row.gemini_manual_pct) : null,
+          gemini_manual_resets_at: row.gemini_manual_resets_at,
+          gemini_manual_updated_at: row.gemini_manual_updated_at,
+          gemini_is_expired: isExpired,
+          gemini_source: geminiSource,
+          claude_pct: claudePct,
+          claude_resets_at: row.claude_resets_at,
+          gemini_pct: effectiveGeminiPct,
+          gemini_resets_at: effectiveGeminiResetsAt,
+          mingguan_pct: row.mingguan_pct != null ? Number(row.mingguan_pct) : null,
+          mingguan_resets_at: row.mingguan_resets_at,
+          lowest_tracked_pct: statusCalc.lowest_pct,
+          status: statusCalc.status,
+          status_reason: statusCalc.statusLabel,
+          is_active: row.account_id === activeId,
+        };
+      });
     } catch (err: any) {
       console.warn('[DB] PG pool error, fallback:', err.message);
     }
@@ -334,32 +379,77 @@ export async function getAccountsWithStatus(): Promise<AccountWithStatus[]> {
       if (!error && data) {
         const { data: rot } = await supabase.from('rotation_settings').select('active_account_id').single();
         const activeId = rot?.active_account_id;
+        const now = new Date();
 
-        return data.map((row: any) => ({
-          id: row.account_id,
-          nickname: row.nickname,
-          email: row.email,
-          tier: row.tier,
-          paused: row.paused,
-          tracked_models: row.tracked_models,
-          in_rotation: row.in_rotation,
-          created_at: row.created_at,
-          claude_pct: row.claude_pct != null ? Number(row.claude_pct) : null,
-          claude_resets_at: row.claude_resets_at,
-          gemini_pct: row.gemini_pct != null ? Number(row.gemini_pct) : null,
-          gemini_resets_at: row.gemini_resets_at,
-          mingguan_pct: row.mingguan_pct != null ? Number(row.mingguan_pct) : null,
-          mingguan_resets_at: row.mingguan_resets_at,
-          lowest_tracked_pct: row.lowest_tracked_pct != null ? Number(row.lowest_tracked_pct) : null,
-          status: row.status,
-          is_active: row.account_id === activeId,
-        }));
+        return data.map((row: any) => {
+          const hasManual = row.gemini_manual_pct != null && Number.isFinite(Number(row.gemini_manual_pct));
+          const isExpired = Boolean(
+            hasManual &&
+            row.gemini_manual_resets_at &&
+            !isNaN(new Date(row.gemini_manual_resets_at).getTime()) &&
+            new Date(row.gemini_manual_resets_at) <= now
+          );
+
+          let effectiveGeminiPct: number | null = null;
+          let effectiveGeminiResetsAt: string | null = null;
+          let geminiSource: 'server' | 'manual' | 'tidak_tersedia' = 'tidak_tersedia';
+
+          if (hasManual && !isExpired) {
+            effectiveGeminiPct = Number(row.gemini_manual_pct);
+            effectiveGeminiResetsAt = row.gemini_manual_resets_at;
+            geminiSource = 'manual';
+          } else if (row.gemini_pct != null && Number.isFinite(Number(row.gemini_pct))) {
+            effectiveGeminiPct = Number(row.gemini_pct);
+            effectiveGeminiResetsAt = row.gemini_resets_at;
+            geminiSource = 'server';
+          } else {
+            effectiveGeminiPct = null;
+            effectiveGeminiResetsAt = null;
+            geminiSource = 'tidak_tersedia';
+          }
+
+          const claudePct = row.claude_pct != null && Number.isFinite(Number(row.claude_pct)) ? Number(row.claude_pct) : null;
+
+          const statusCalc = calculateAccountStatus({
+            paused: row.paused,
+            tracked_models: row.tracked_models,
+            claude_pct: claudePct,
+            gemini_pct: effectiveGeminiPct,
+          });
+
+          return {
+            id: row.account_id,
+            nickname: row.nickname,
+            email: row.email,
+            tier: row.tier,
+            paused: row.paused,
+            tracked_models: row.tracked_models,
+            in_rotation: row.in_rotation,
+            created_at: row.created_at,
+            gemini_manual_pct: row.gemini_manual_pct != null ? Number(row.gemini_manual_pct) : null,
+            gemini_manual_resets_at: row.gemini_manual_resets_at,
+            gemini_manual_updated_at: row.gemini_manual_updated_at,
+            gemini_is_expired: isExpired,
+            gemini_source: geminiSource,
+            claude_pct: claudePct,
+            claude_resets_at: row.claude_resets_at,
+            gemini_pct: effectiveGeminiPct,
+            gemini_resets_at: effectiveGeminiResetsAt,
+            mingguan_pct: row.mingguan_pct != null ? Number(row.mingguan_pct) : null,
+            mingguan_resets_at: row.mingguan_resets_at,
+            lowest_tracked_pct: statusCalc.lowest_pct,
+            status: statusCalc.status,
+            status_reason: statusCalc.statusLabel,
+            is_active: row.account_id === activeId,
+          };
+        });
       }
     } catch {}
   }
 
   // Fallback to local memory store
   const activeId = localDb.rotationSettings.active_account_id;
+  const now = new Date();
   return localDb.accounts.map((acc) => {
     const claudeSnap = localDb.snapshots
       .filter((s) => s.account_id === acc.id && s.model === 'claude')
@@ -369,28 +459,59 @@ export async function getAccountsWithStatus(): Promise<AccountWithStatus[]> {
       .filter((s) => s.account_id === acc.id && s.model === 'gemini')
       .sort((a, b) => new Date(b.fetched_at).getTime() - new Date(a.fetched_at).getTime())[0];
 
-    const mingguanSnap = localDb.snapshots
-      .filter((s) => s.account_id === acc.id && s.model === 'mingguan')
-      .sort((a, b) => new Date(b.fetched_at).getTime() - new Date(a.fetched_at).getTime())[0];
+    const hasManual = acc.gemini_manual_pct != null && Number.isFinite(Number(acc.gemini_manual_pct));
+    const isExpired = Boolean(
+      hasManual &&
+      acc.gemini_manual_resets_at &&
+      !isNaN(new Date(acc.gemini_manual_resets_at).getTime()) &&
+      new Date(acc.gemini_manual_resets_at) <= now
+    );
+
+    let effectiveGeminiPct: number | null = null;
+    let effectiveGeminiResetsAt: string | null = null;
+    let geminiSource: 'server' | 'manual' | 'tidak_tersedia' = 'tidak_tersedia';
+
+    if (hasManual && !isExpired) {
+      effectiveGeminiPct = Number(acc.gemini_manual_pct);
+      effectiveGeminiResetsAt = acc.gemini_manual_resets_at || null;
+      geminiSource = 'manual';
+    } else if (geminiSnap?.remaining_pct != null && Number.isFinite(geminiSnap.remaining_pct)) {
+      effectiveGeminiPct = geminiSnap.remaining_pct;
+      effectiveGeminiResetsAt = geminiSnap.resets_at;
+      geminiSource = 'server';
+    } else {
+      effectiveGeminiPct = null;
+      effectiveGeminiResetsAt = null;
+      geminiSource = 'tidak_tersedia';
+    }
+
+    const claudePct = claudeSnap?.remaining_pct != null && Number.isFinite(claudeSnap.remaining_pct)
+      ? claudeSnap.remaining_pct
+      : null;
 
     const statusCalc = calculateAccountStatus({
       paused: acc.paused,
       tracked_models: acc.tracked_models,
-      claude_pct: claudeSnap?.remaining_pct,
-      gemini_pct: geminiSnap?.remaining_pct,
-      mingguan_pct: mingguanSnap?.remaining_pct,
+      claude_pct: claudePct,
+      gemini_pct: effectiveGeminiPct,
     });
 
     return {
       ...acc,
-      claude_pct: claudeSnap?.remaining_pct ?? null,
-      claude_resets_at: claudeSnap?.resets_at ?? null,
-      gemini_pct: geminiSnap?.remaining_pct ?? null,
-      gemini_resets_at: geminiSnap?.resets_at ?? null,
-      mingguan_pct: mingguanSnap?.remaining_pct ?? null,
-      mingguan_resets_at: mingguanSnap?.resets_at ?? null,
+      gemini_manual_pct: acc.gemini_manual_pct != null ? Number(acc.gemini_manual_pct) : null,
+      gemini_manual_resets_at: acc.gemini_manual_resets_at || null,
+      gemini_manual_updated_at: acc.gemini_manual_updated_at || null,
+      gemini_is_expired: isExpired,
+      gemini_source: geminiSource,
+      claude_pct: claudePct,
+      claude_resets_at: claudeSnap?.resets_at || null,
+      gemini_pct: effectiveGeminiPct,
+      gemini_resets_at: effectiveGeminiResetsAt,
+      mingguan_pct: claudePct,
+      mingguan_resets_at: claudeSnap?.resets_at || null,
       lowest_tracked_pct: statusCalc.lowest_pct,
       status: statusCalc.status,
+      status_reason: statusCalc.statusLabel,
       is_active: acc.id === activeId,
     };
   });
@@ -713,4 +834,57 @@ export async function saveQuotaSnapshot(snapshot: Omit<QuotaSnapshot, 'id' | 'fe
   };
   localDb.snapshots.push(newSnap);
   return newSnap;
+}
+
+export async function updateAccountManualGemini(
+  accountId: string,
+  geminiManualPct: number | null,
+  geminiManualResetsAt: string | null
+): Promise<Account | null> {
+  const pgPool = getPool();
+  const now = new Date().toISOString();
+  const hasManual = geminiManualPct !== null && Number.isFinite(geminiManualPct);
+  const updatedVal = hasManual ? Math.max(0, Math.min(100, Math.round(geminiManualPct!))) : null;
+  const updatedAt = hasManual ? now : null;
+  const resetsAt = hasManual && geminiManualResetsAt ? geminiManualResetsAt : null;
+
+  if (pgPool) {
+    try {
+      const { rows } = await pgPool.query(
+        `UPDATE accounts 
+         SET gemini_manual_pct = $1, gemini_manual_resets_at = $2, gemini_manual_updated_at = $3
+         WHERE id = $4 RETURNING *;`,
+        [updatedVal, resetsAt, updatedAt, accountId]
+      );
+      if (rows.length > 0) return rows[0] as Account;
+    } catch (err: any) {
+      console.warn('[DB] PG updateAccountManualGemini error:', err.message);
+    }
+  }
+
+  const supabase = getServerSupabase();
+  if (supabase) {
+    try {
+      const { data, error } = await supabase
+        .from('accounts')
+        .update({
+          gemini_manual_pct: updatedVal,
+          gemini_manual_resets_at: resetsAt,
+          gemini_manual_updated_at: updatedAt,
+        })
+        .eq('id', accountId)
+        .select()
+        .single();
+      if (!error && data) return data as Account;
+    } catch {}
+  }
+
+  const acc = localDb.accounts.find((a) => a.id === accountId);
+  if (acc) {
+    acc.gemini_manual_pct = updatedVal;
+    acc.gemini_manual_resets_at = resetsAt;
+    acc.gemini_manual_updated_at = updatedAt;
+    return acc;
+  }
+  return null;
 }

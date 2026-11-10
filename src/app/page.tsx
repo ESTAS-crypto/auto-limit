@@ -231,7 +231,10 @@ export default function DashboardPage() {
               {filteredAccounts.map((acc, idx) => {
                 const isLimit = acc.status === 'limit';
                 const cardClass = isLimit ? 'card hot p-5.5 sm:p-6' : 'card rise ld p-5.5 sm:p-6';
-                const overallPct = acc.lowest_tracked_pct ?? 0;
+                const overallPct =
+                  typeof acc.lowest_tracked_pct === 'number' && Number.isFinite(acc.lowest_tracked_pct)
+                    ? acc.lowest_tracked_pct
+                    : null;
 
                 return (
                   <div
@@ -266,7 +269,7 @@ export default function DashboardPage() {
                       <Ring value={overallPct} size={64} />
                       <div className="flex-1 grid gap-2.5">
                         <QuotaBar
-                          label="Gemini (mingguan)"
+                          label={`Gemini (mingguan)${acc.gemini_source === 'manual' ? ' (manual)' : ''}`}
                           value={acc.gemini_pct}
                           resetText={formatResetTime(acc.gemini_resets_at)}
                         />

@@ -17,6 +17,9 @@ export interface Account {
   in_rotation: boolean;
   credentials_enc?: string | null;
   created_at?: string;
+  gemini_manual_pct?: number | null;
+  gemini_manual_resets_at?: string | null;
+  gemini_manual_updated_at?: string | null;
 }
 
 export interface QuotaSnapshot {
@@ -33,6 +36,8 @@ export interface AccountWithStatus extends Account {
   claude_resets_at?: string | null;
   gemini_pct?: number | null;
   gemini_resets_at?: string | null;
+  gemini_source?: 'server' | 'manual' | 'tidak_tersedia';
+  gemini_is_expired?: boolean;
   mingguan_pct?: number | null;
   mingguan_resets_at?: string | null;
   lowest_tracked_pct?: number | null;

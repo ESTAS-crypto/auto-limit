@@ -114,3 +114,32 @@ Quota Radar menyediakan endpoint lokal untuk skrip atau ekstensi IDE:
 ## 5. Rencana Tahap Lanjutan
 Di masa mendatang, aplikasi ini dapat dibungkus menjadi file installer executable desktop (`.exe`) tunggal menggunakan Tauri atau Electron yang menyertakan tray icon di taskbar Windows.
 
+---
+
+## 6. Laporan Penyelidikan: Limit Mingguan & Language Server IDE
+
+### A. Dimensi Kuota: Claude/GPT vs Gemini
+1. **Claude dan GPT (mingguan)**:
+   - Sumber: Endpoint resmi `cloudcode-pa.googleapis.com/v1internal:retrieveUserQuotaSummary`.
+   - Grup: `Claude and GPT models` (bucket `3p-weekly`).
+   - Status: Akurat dan otomatis diperbarui langsung dari server Google untuk semua akun.
+
+2. **Gemini Models (mingguan)**:
+   - Temuan Empiris: Endpoint server REST (`retrieveUserQuotaSummary`, `fetchAvailableModels`, `retrieveUserQuota`, `loadCodeAssist`) **tidak mengembalikan** kuota mingguan Gemini untuk akun tingkat Starter/Free.
+   - Di UI dan database: Ditampilkan secara transparan sebagai **"tidak tersedia dari server"** (`status: tidak_diketahui`, ikon `?`), bukan nilai default palsu 100% atau 0%.
+   - **Status Akun**: Jika Gemini kosong/tidak tersedia, status kesehatan akun (aktif/hampir limit/limit) dihitung **hanya dari Claude**.
+   - **Fitur Isian Manual "Gemini mingguan (dari IDE)"**:
+     - Pengguna dapat mengisi persentase Gemini dan waktu reset (sesuai yang tertera di menu *Models & Usage* pada Antigravity IDE) melalui tombol **Sesuaikan** di halaman Akun.
+     - Nilai manual diberi label `(manual)` dan akan **otomatis kedaluwarsa** setelah waktu reset tercapai (kembali menjadi tidak tersedia).
+
+### B. Hasil Penyelidikan Language Server Lokal IDE Antigravity
+Sesuai pengujian terhadap proses lokal Antigravity IDE yang sedang berjalan:
+1. Port lokal yang terbuka:
+   - `Port 50131`: Server internal pratinjau browser HTML IDE (`<!DOCTYPE html>...<link rel="stylesheet" href="browser.css">`), bukan endpoint API.
+   - `Port 59641`: Server internal web UI Antigravity Hub (`agy.exe --hub`).
+2. Proses IDE (`Antigravity IDE.exe`):
+   - Berjalan sebagai arsitektur Electron multi-proses yang berkomunikasi menggunakan IPC internal Node.js (`--node-ipc`) dan Unix domain socket/named pipe privat tanpa antarmuka REST atau gRPC eksternal yang dapat diakses publik.
+3. Di dalam IDE, nilai `0%` atau limit Gemini muncul saat terjadi error penolakan kuota (`ARGON_LIMIT_REACHED` / `QUOTA_EXHAUSTED`) dengan metadata `quotaResetUTCTimestamp` yang disimpan dalam state memori internal renderer Electron IDE.
+4. **Kesimpulan**: Language server proses lokal IDE tidak mengekspos API publik untuk pembacaan kuota eksternal. Oleh karena itu, pendekatan yang digunakan adalah integrasi resmi REST API untuk Claude/GPT dan fitur isian manual terpandu (dengan auto-expiry) untuk Gemini.
+
+

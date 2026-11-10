@@ -67,11 +67,20 @@ export async function GET() {
             reason: live.claude_reason ?? null,
           },
         },
+        manual_gemini: {
+          pct: acc.gemini_manual_pct ?? null,
+          resets_at: acc.gemini_manual_resets_at ?? null,
+          updated_at: acc.gemini_manual_updated_at ?? null,
+          is_expired: acc.gemini_is_expired ?? false,
+          effective_source: acc.gemini_source ?? 'tidak_tersedia',
+        },
         final: {
-          lowest_pct: statusCalc.lowest_pct,
-          status: statusCalc.status,
-          statusLabel: statusCalc.statusLabel,
-          reason: live.error ?? null,
+          gemini_effective_pct: acc.gemini_pct,
+          claude_pct: acc.claude_pct,
+          lowest_pct: acc.lowest_tracked_pct,
+          status: acc.status,
+          statusLabel: acc.status_reason ?? acc.status,
+          reason: live.error ?? (acc.gemini_pct === null ? 'Gemini mingguan tidak tersedia dari server (status akun dihitung dari Claude)' : null),
         },
       });
     }

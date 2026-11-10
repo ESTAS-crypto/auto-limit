@@ -47,14 +47,12 @@ if not exist ".env.local" (
     call npm run setup
 )
 
-if not exist ".next\BUILD_ID" (
-    echo [INFO] Menyiapkan build produksi Next.js...
-    call npm run build
-    if %errorlevel% neq 0 (
-        echo [ERROR] Build produksi gagal.
-        pause
-        exit /b 1
-    )
+echo [INFO] Memverifikasi dan menyiapkan build produksi Next.js...
+call npm run build
+if %errorlevel% neq 0 (
+    echo [ERROR] Build produksi gagal.
+    pause
+    exit /b 1
 )
 
 echo.

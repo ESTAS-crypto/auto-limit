@@ -20,8 +20,8 @@ export default function AkunPage() {
 
   // Edit Quota Modal State
   const [editingAccount, setEditingAccount] = useState<AccountWithStatus | null>(null);
-  const [editClaudePct, setEditClaudePct] = useState(100);
-  const [editGeminiPct, setEditGeminiPct] = useState(100);
+  const [editManualGeminiPct, setEditManualGeminiPct] = useState<string>('');
+  const [editManualGeminiResetsAt, setEditManualGeminiResetsAt] = useState<string>('');
 
   const { data, isLoading } = useQuery<{ ok: boolean; data: AccountWithStatus[] }>({
     queryKey: ['accounts'],
@@ -41,12 +41,26 @@ export default function AkunPage() {
     },
   });
 
-  const updateQuotaMutation = useMutation({
-    mutationFn: async ({ id, claude, gemini }: { id: string; claude: number; gemini: number }) => {
+  const updateManualGeminiMutation = useMutation({
+    mutationFn: async ({
+      id,
+      gemini_manual_pct,
+      gemini_manual_resets_at,
+      gemini_manual_clear,
+    }: {
+      id: string;
+      gemini_manual_pct?: number | null;
+      gemini_manual_resets_at?: string | null;
+      gemini_manual_clear?: boolean;
+    }) => {
       const res = await fetch(`/api/accounts/${id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ claude_pct: claude, gemini_pct: gemini }),
+        body: JSON.stringify({
+          gemini_manual_pct,
+          gemini_manual_resets_at,
+          gemini_manual_clear,
+        }),
       });
       return res.json();
     },
@@ -97,8 +111,24 @@ export default function AkunPage() {
 
   const openEditModal = (acc: AccountWithStatus) => {
     setEditingAccount(acc);
-    setEditClaudePct(acc.claude_pct ?? 100);
-    setEditGeminiPct(acc.gemini_pct ?? 100);
+    setEditManualGeminiPct(
+      acc.gemini_manual_pct !== null && acc.gemini_manual_pct !== undefined
+        ? String(acc.gemini_manual_pct)
+        : ''
+    );
+    if (acc.gemini_manual_resets_at) {
+      try {
+        const d = new Date(acc.gemini_manual_resets_at);
+        const localIso = new Date(d.getTime() - d.getTimezoneOffset() * 60000)
+          .toISOString()
+          .slice(0, 16);
+        setEditManualGeminiResetsAt(localIso);
+      } catch {
+        setEditManualGeminiResetsAt('');
+      }
+    } else {
+      setEditManualGeminiResetsAt('');
+    }
   };
 
   return (
@@ -243,14 +273,23 @@ export default function AkunPage() {
                 </div>
                 <span className="sub capitalize">{acc.tier}</span>
                 <span className="mono text-sm">
-                  {acc.gemini_pct !== null && acc.gemini_pct !== undefined
-                    ? `${acc.gemini_pct}%`
-                    : 'Tidak diketahui'}
+                  {acc.gemini_pct !== null && acc.gemini_pct !== undefined ? (
+                    <span className="flex items-center gap-1.5">
+                      <span>{acc.gemini_pct}%</span>
+                      {acc.gemini_source === 'manual' && (
+                        <span className="text-[10px] px-1.5 py-0.5 rounded bg-blue-500/10 text-blue-400 border border-blue-500/20">
+                          manual
+                        </span>
+                      )}
+                    </span>
+                  ) : (
+                    <span className="text-text-sub text-xs italic">tidak tersedia dari server</span>
+                  )}
                 </span>
                 <span className="mono text-sm">
                   {acc.claude_pct !== null && acc.claude_pct !== undefined
                     ? `${acc.claude_pct}%`
-                    : 'Tidak diketahui'}
+                    : <span className="text-text-sub text-xs italic">tidak tersedia</span>}
                 </span>
                 <div>
                   <StatusChip status={acc.status} />
@@ -258,7 +297,7 @@ export default function AkunPage() {
                 <div className="flex items-center gap-2">
                   <button
                     className="btn text-xs py-1.5 px-3"
-                    title="Sesuaikan sisa kuota Claude/Gemini"
+                    title="Sesuaikan sisa kuota Gemini mingguan dari IDE"
                     onClick={() => openEditModal(acc)}
                   >
                     <span>Sesuaikan</span>
@@ -287,9 +326,9 @@ export default function AkunPage() {
         {/* Edit Quota Modal */}
         {editingAccount && (
           <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-            <div className="card rise p-6 sm:p-7 max-w-md w-full border border-border shadow-2xl">
+            <div className="card rise p-6 sm:p-7 max-w-lg w-full border border-border shadow-2xl">
               <div className="flex justify-between items-center pb-3 border-b border-border">
-                <div className="disp text-xl font-bold">Sesuaikan Kuota</div>
+                <div className="disp text-xl font-bold">Sesuaikan Kuota Akun</div>
                 <button
                   className="sub hover:text-foreground text-sm"
                   onClick={() => setEditingAccount(null)}
@@ -300,59 +339,124 @@ export default function AkunPage() {
 
               <div className="mt-3">
                 <div className="mono text-sm text-text font-medium">{editingAccount.email}</div>
-                <p className="sub text-xs mt-1">
-                  Atur sisa kuota Claude dan Gemini sesuai tampilan di IDE Antigravity Anda.
-                </p>
-              </div>
-
-              <div className="space-y-4 mt-5">
-                <div>
-                  <div className="flex justify-between text-xs mb-1.5">
-                    <span className="text-text font-medium">Gemini (mingguan)</span>
-                    <span className="mono text-radar-green font-bold">{editGeminiPct}%</span>
-                  </div>
-                  <input
-                    type="range"
-                    min="0"
-                    max="100"
-                    value={editGeminiPct}
-                    onChange={(e) => setEditGeminiPct(parseInt(e.target.value, 10))}
-                    className="w-full accent-radar-green cursor-pointer"
-                  />
-                </div>
-
-                <div>
-                  <div className="flex justify-between text-xs mb-1.5">
-                    <span className="text-text font-medium">Claude dan GPT (mingguan)</span>
-                    <span className="mono text-radar-green font-bold">{editClaudePct}%</span>
-                  </div>
-                  <input
-                    type="range"
-                    min="0"
-                    max="100"
-                    value={editClaudePct}
-                    onChange={(e) => setEditClaudePct(parseInt(e.target.value, 10))}
-                    className="w-full accent-radar-green cursor-pointer"
-                  />
+                <div className="sub text-xs mt-0.5">
+                  Tier: <span className="capitalize">{editingAccount.tier}</span> · Status saat ini: <StatusChip status={editingAccount.status} />
                 </div>
               </div>
 
-              <div className="flex gap-3 mt-7">
+              {/* Claude and GPT status from Server */}
+              <div className="mt-5 p-3.5 rounded-xl border border-border bg-surface/40 space-y-1">
+                <div className="flex justify-between items-center text-xs">
+                  <span className="font-medium text-text">Claude dan GPT (mingguan)</span>
+                  <span className="mono font-bold text-radar-green">
+                    {editingAccount.claude_pct !== null && editingAccount.claude_pct !== undefined
+                      ? `${editingAccount.claude_pct}% sisa real`
+                      : 'Tidak tersedia'}
+                  </span>
+                </div>
+                <div className="text-[11px] text-text-sub flex justify-between">
+                  <span>Sumber: Google Cloud Code API</span>
+                  <span>Reset: {formatResetTime(editingAccount.claude_resets_at)}</span>
+                </div>
+              </div>
+
+              {/* Manual Input for Gemini Weekly */}
+              <div className="mt-5 space-y-4">
+                <div className="p-4 rounded-xl border border-blue-500/20 bg-blue-500/5 space-y-3">
+                  <div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm font-semibold text-text">Gemini mingguan (dari IDE)</span>
+                      {editingAccount.gemini_source === 'manual' && (
+                        <span className="text-[10px] px-2 py-0.5 rounded bg-blue-500/10 text-blue-400 border border-blue-500/20">
+                          {editingAccount.gemini_is_expired ? 'Kedaluwarsa' : 'Sedang Aktif (Manual)'}
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-xs text-text-sub mt-1 leading-relaxed">
+                      Google API tidak menyediakan limit mingguan Gemini. Masukkan persentase dan tanggal reset dari menu <strong>Models &amp; Usage</strong> di Antigravity IDE jika ingin dipantau. Nilai otomatis kedaluwarsa setelah waktu reset.
+                    </p>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+                    <div>
+                      <label className="lbl text-xs" htmlFor="gemini-pct-input">
+                        Sisa Persen (0 - 100)
+                      </label>
+                      <input
+                        id="gemini-pct-input"
+                        type="number"
+                        min="0"
+                        max="100"
+                        placeholder="Contoh: 0 atau 61"
+                        value={editManualGeminiPct}
+                        onChange={(e) => setEditManualGeminiPct(e.target.value)}
+                        className="in font-mono text-sm py-2 px-3"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="lbl text-xs" htmlFor="gemini-reset-input">
+                        Tanggal &amp; Jam Reset (opsional)
+                      </label>
+                      <input
+                        id="gemini-reset-input"
+                        type="datetime-local"
+                        value={editManualGeminiResetsAt}
+                        onChange={(e) => setEditManualGeminiResetsAt(e.target.value)}
+                        className="in font-mono text-xs py-2 px-3"
+                      />
+                    </div>
+                  </div>
+
+                  {editingAccount.gemini_manual_updated_at && (
+                    <div className="text-[11px] text-text-sub pt-1">
+                      Terakhir diisi manual: {new Date(editingAccount.gemini_manual_updated_at).toLocaleString('id-ID')}
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              <div className="flex gap-2 mt-6 flex-wrap">
                 <button
-                  className="btn pri flex-1 justify-center"
-                  disabled={updateQuotaMutation.isPending}
-                  onClick={() =>
-                    updateQuotaMutation.mutate({
+                  className="btn pri flex-1 justify-center text-xs py-2.5"
+                  disabled={updateManualGeminiMutation.isPending}
+                  onClick={() => {
+                    const rawVal = editManualGeminiPct.trim();
+                    const numVal = rawVal === '' ? null : Number(rawVal);
+                    if (numVal !== null && (isNaN(numVal) || numVal < 0 || numVal > 100)) {
+                      alert('Masukkan angka persentase valid antara 0 dan 100');
+                      return;
+                    }
+                    const resetIso = editManualGeminiResetsAt
+                      ? new Date(editManualGeminiResetsAt).toISOString()
+                      : null;
+                    updateManualGeminiMutation.mutate({
                       id: editingAccount.id,
-                      claude: editClaudePct,
-                      gemini: editGeminiPct,
-                    })
-                  }
+                      gemini_manual_pct: numVal,
+                      gemini_manual_resets_at: resetIso,
+                    });
+                  }}
                 >
                   <Icon name="check" size={16} />
-                  <span>{updateQuotaMutation.isPending ? 'Menyimpan...' : 'Simpan Kuota'}</span>
+                  <span>{updateManualGeminiMutation.isPending ? 'Menyimpan...' : 'Simpan Nilai Manual'}</span>
                 </button>
-                <button className="btn" onClick={() => setEditingAccount(null)}>
+
+                {editingAccount.gemini_manual_pct !== null && (
+                  <button
+                    className="btn text-xs py-2.5 px-3 text-radar-red"
+                    disabled={updateManualGeminiMutation.isPending}
+                    onClick={() => {
+                      updateManualGeminiMutation.mutate({
+                        id: editingAccount.id,
+                        gemini_manual_clear: true,
+                      });
+                    }}
+                  >
+                    <span>Hapus Manual</span>
+                  </button>
+                )}
+
+                <button className="btn text-xs py-2.5 px-3" onClick={() => setEditingAccount(null)}>
                   Batal
                 </button>
               </div>
@@ -365,23 +469,30 @@ export default function AkunPage() {
           <div className="sub text-xs">Akun lain</div>
           {accounts
             .filter((a) => a.id !== selectedAccount?.id)
-            .map((acc, idx) => (
-              <div
-                key={acc.id}
-                className="card rise p-2.5 px-3.5 flex items-center gap-3 cursor-pointer"
-                style={{ '--i': 5 + idx } as React.CSSProperties}
-                onClick={() => setSelectedAccountId(acc.id)}
-              >
-                <Ring value={acc.lowest_tracked_pct ?? 0} size={44} />
-                <div className="flex-1 min-w-0">
-                  <div className="mono text-xs truncate font-medium">{acc.email}</div>
-                  <div className="sub text-[11px] capitalize">
-                    {acc.tier} · Claude {acc.claude_pct ?? 0}% · Gemini {acc.gemini_pct ?? 0}%
+            .map((acc, idx) => {
+              const claudeText = acc.claude_pct !== null && acc.claude_pct !== undefined ? `${acc.claude_pct}%` : '-';
+              const geminiText = acc.gemini_pct !== null && acc.gemini_pct !== undefined
+                ? `${acc.gemini_pct}%${acc.gemini_source === 'manual' ? ' (m)' : ''}`
+                : 'n/a';
+
+              return (
+                <div
+                  key={acc.id}
+                  className="card rise p-2.5 px-3.5 flex items-center gap-3 cursor-pointer"
+                  style={{ '--i': 5 + idx } as React.CSSProperties}
+                  onClick={() => setSelectedAccountId(acc.id)}
+                >
+                  <Ring value={acc.lowest_tracked_pct} size={44} />
+                  <div className="flex-1 min-w-0">
+                    <div className="mono text-xs truncate font-medium">{acc.email}</div>
+                    <div className="sub text-[11px] capitalize">
+                      {acc.tier} · Claude {claudeText} · Gemini {geminiText}
+                    </div>
                   </div>
+                  <StatusChip status={acc.status} />
                 </div>
-                <StatusChip status={acc.status} />
-              </div>
-            ))}
+              );
+            })}
         </div>
 
         {/* Floating Add Account Button for Mobile */}
