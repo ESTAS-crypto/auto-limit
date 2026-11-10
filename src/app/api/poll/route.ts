@@ -17,28 +17,20 @@ export async function POST() {
     for (const res of results) {
       const match = accounts.find((a) => a.email.toLowerCase() === res.email.toLowerCase());
       if (match) {
-        if (typeof res.claude_pct === 'number' && Number.isFinite(res.claude_pct)) {
-          await saveQuotaSnapshot({
-            account_id: match.id,
-            model: 'claude',
-            remaining_pct: res.claude_pct,
-            resets_at: res.claude_resets_at,
-          });
-        }
         if (typeof res.gemini_pct === 'number' && Number.isFinite(res.gemini_pct)) {
           await saveQuotaSnapshot({
             account_id: match.id,
             model: 'gemini',
             remaining_pct: res.gemini_pct,
-            resets_at: res.gemini_resets_at,
+            resets_at: res.gemini_resets_at || null,
           });
         }
-        if (typeof res.mingguan_pct === 'number' && Number.isFinite(res.mingguan_pct)) {
+        if (typeof res.claude_pct === 'number' && Number.isFinite(res.claude_pct)) {
           await saveQuotaSnapshot({
             account_id: match.id,
-            model: 'mingguan',
-            remaining_pct: res.mingguan_pct,
-            resets_at: res.mingguan_resets_at,
+            model: 'claude',
+            remaining_pct: res.claude_pct,
+            resets_at: res.claude_resets_at || null,
           });
         }
       }

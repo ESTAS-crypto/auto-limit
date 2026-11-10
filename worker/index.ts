@@ -54,14 +54,6 @@ async function pollOnce() {
   for (const res of results) {
     const acc = accounts.find((a) => a.email.toLowerCase() === res.email.toLowerCase());
     if (acc) {
-      if (res.claude_pct != null && Number.isFinite(res.claude_pct)) {
-        await saveQuotaSnapshot({
-          account_id: acc.id,
-          model: 'claude',
-          remaining_pct: res.claude_pct,
-          resets_at: res.claude_resets_at || null,
-        });
-      }
       if (res.gemini_pct != null && Number.isFinite(res.gemini_pct)) {
         await saveQuotaSnapshot({
           account_id: acc.id,
@@ -70,12 +62,12 @@ async function pollOnce() {
           resets_at: res.gemini_resets_at || null,
         });
       }
-      if (res.mingguan_pct != null && Number.isFinite(res.mingguan_pct)) {
+      if (res.claude_pct != null && Number.isFinite(res.claude_pct)) {
         await saveQuotaSnapshot({
           account_id: acc.id,
-          model: 'mingguan',
-          remaining_pct: res.mingguan_pct,
-          resets_at: res.mingguan_resets_at || null,
+          model: 'claude',
+          remaining_pct: res.claude_pct,
+          resets_at: res.claude_resets_at || null,
         });
       }
       // Delay kecil antar akun untuk serial request

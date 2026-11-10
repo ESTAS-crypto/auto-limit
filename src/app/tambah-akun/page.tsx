@@ -400,25 +400,29 @@ export default function TambahAkunPage() {
               <div className="mt-5 space-y-1">
                 <div className="opt">
                   <div>
-                    <div className="t text-sm">Pantau kuota Claude</div>
-                    <div className="sub text-xs">Hitung ambang & reset Claude Opus ({claudePct}%)</div>
-                  </div>
-                  <Switch
-                    checked={trackClaude}
-                    onChange={setTrackClaude}
-                    ariaLabel="Pantau Claude"
-                  />
-                </div>
-
-                <div className="opt">
-                  <div>
-                    <div className="t text-sm">Pantau kuota Gemini</div>
-                    <div className="sub text-xs">Hitung ambang & reset Gemini Pro ({geminiPct}%)</div>
+                    <div className="t text-sm">Pantau kuota Gemini (mingguan)</div>
+                    <div className="sub text-xs">
+                      Hitung ambang & reset Gemini ({geminiPct !== null && geminiPct !== undefined ? `${geminiPct}%` : 'Tidak diketahui'})
+                    </div>
                   </div>
                   <Switch
                     checked={trackGemini}
                     onChange={setTrackGemini}
                     ariaLabel="Pantau Gemini"
+                  />
+                </div>
+
+                <div className="opt">
+                  <div>
+                    <div className="t text-sm">Pantau kuota Claude dan GPT (mingguan)</div>
+                    <div className="sub text-xs">
+                      Hitung ambang & reset Claude/GPT ({claudePct !== null && claudePct !== undefined ? `${claudePct}%` : 'Tidak diketahui'})
+                    </div>
+                  </div>
+                  <Switch
+                    checked={trackClaude}
+                    onChange={setTrackClaude}
+                    ariaLabel="Pantau Claude"
                   />
                 </div>
 
@@ -496,7 +500,7 @@ export default function TambahAkunPage() {
 
         {/* Step 3: Kuota Pertama & Selesai */}
         {step === 3 && (() => {
-          const finiteVals = [claudePct, geminiPct, mingguanPct].filter(
+          const finiteVals = [geminiPct, claudePct].filter(
             (v): v is number => typeof v === 'number' && Number.isFinite(v)
           );
           const lowestPct = finiteVals.length > 0 ? Math.min(...finiteVals) : null;
@@ -508,8 +512,7 @@ export default function TambahAkunPage() {
             statusBadgeLabel = 'Tidak Diketahui';
           } else if (lowestPct <= 15) {
             statusBadge = 'limit';
-            if (geminiPct !== null && geminiPct <= 15) statusBadgeLabel = 'Gemini Limit Mingguan';
-            else if (mingguanPct !== null && mingguanPct <= 15) statusBadgeLabel = 'Limit Mingguan';
+            if (geminiPct !== null && geminiPct <= 15) statusBadgeLabel = 'Gemini Limit';
             else if (claudePct !== null && claudePct <= 15) statusBadgeLabel = 'Claude Limit';
             else statusBadgeLabel = 'Limit Tercapai';
           } else if (lowestPct <= 25) {
@@ -525,28 +528,20 @@ export default function TambahAkunPage() {
                   <StatusChip status={statusBadge} label={statusBadgeLabel} />
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-6 text-center">
-                  <div className="flex flex-col items-center gap-2 p-2 rounded-xl bg-surface/50">
-                    <Ring value={claudePct} size={90} strokeWidth={7} />
-                    <div className="t font-medium mt-1 text-sm">Claude Opus</div>
-                    <div className="sub text-xs">
-                      {claudePct !== null ? `${claudePct}% sisa real` : 'Tidak diketahui'}
-                    </div>
-                  </div>
-
-                  <div className="flex flex-col items-center gap-2 p-2 rounded-xl bg-surface/50">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-6 text-center">
+                  <div className="flex flex-col items-center gap-2 p-3 rounded-xl bg-surface/50">
                     <Ring value={geminiPct} size={90} strokeWidth={7} />
-                    <div className="t font-medium mt-1 text-sm">Gemini Pro</div>
+                    <div className="t font-medium mt-1 text-sm">Gemini (mingguan)</div>
                     <div className="sub text-xs">
                       {geminiPct !== null ? `${geminiPct}% sisa real` : 'Tidak diketahui'}
                     </div>
                   </div>
 
-                  <div className="flex flex-col items-center gap-2 p-2 rounded-xl bg-surface/50">
-                    <Ring value={mingguanPct} size={90} strokeWidth={7} />
-                    <div className="t font-medium mt-1 text-sm">Limit Mingguan</div>
+                  <div className="flex flex-col items-center gap-2 p-3 rounded-xl bg-surface/50">
+                    <Ring value={claudePct} size={90} strokeWidth={7} />
+                    <div className="t font-medium mt-1 text-sm">Claude dan GPT (mingguan)</div>
                     <div className="sub text-xs">
-                      {mingguanPct !== null ? `${mingguanPct}% sisa real` : 'Tidak diketahui'}
+                      {claudePct !== null ? `${claudePct}% sisa real` : 'Tidak diketahui'}
                     </div>
                   </div>
                 </div>

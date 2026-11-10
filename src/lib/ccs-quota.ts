@@ -108,108 +108,143 @@ export async function refreshGoogleAccessToken(refreshToken: string, filePath?: 
   return newAccessToken;
 }
 
+export interface ParsedDimensionResult {
+  pct: number | null;
+  resets_at: string | null;
+  source_path: string | null;
+  reason: string | null;
+}
+
 export interface ParsedQuotaResult {
+  claude: ParsedDimensionResult;
+  gemini: ParsedDimensionResult;
   claude_pct: number | null;
   claude_resets_at: string | null;
+  claude_source_path: string | null;
+  claude_reason: string | null;
   gemini_pct: number | null;
   gemini_resets_at: string | null;
+  gemini_source_path: string | null;
+  gemini_reason: string | null;
   mingguan_pct: number | null;
   mingguan_resets_at: string | null;
 }
 
-export function parseQuotaResponses(summaryJson: any, quotaJson: any): ParsedQuotaResult {
-  let mingguan_pct: number | null = null;
-  let mingguan_resets_at: string | null = null;
-  let claude_pct: number | null = null;
-  let claude_resets_at: string | null = null;
-  let gemini_pct: number | null = null;
-  let gemini_resets_at: string | null = null;
-
+export function parseQuotaResponses(summaryJson: any, _legacyQuotaJson?: any): ParsedQuotaResult {
+  // Catatan verifikasi IDE Antigravity:
+  // Pada Antigravity IDE (fungsi Bmd di workbench.desktop.main.js), nilai persentase dihitung
+  // langsung dengan Math.round(e * 100) tanpa ambang batas < 0.02.
+  // Rule lama yang memotong < 0.02 telah dihapus karena itu berasal dari kuota pool Gemini CLI,
+  // sedangkan IDE memakai nilai murni dari retrieveUserQuotaSummary.
   const toPct = (frac: number): number => {
-    // Di IDE Antigravity, fraksi < 0.02 (seperti 0.0138672) dianggap habis / 0%
-    if (frac > 0 && frac < 0.02) return 0;
     return Math.round(frac * 100);
   };
 
-  // 1. Ambil limit mingguan dari retrieveUserQuotaSummary
+  let gemini_pct: number | null = null;
+  let gemini_resets_at: string | null = null;
+  let gemini_source_path: string | null = null;
+  let gemini_reason: string | null = null;
+
+  let claude_pct: number | null = null;
+  let claude_resets_at: string | null = null;
+  let claude_source_path: string | null = null;
+  let claude_reason: string | null = null;
+
   if (summaryJson) {
-    const bucketsList: any[] = [];
-    if (Array.isArray(summaryJson.buckets)) {
-      bucketsList.push(...summaryJson.buckets);
-    }
+    // 1. Ekstrak dari groups berdasarkan displayName
     if (Array.isArray(summaryJson.groups)) {
-      for (const g of summaryJson.groups) {
-        if (Array.isArray(g.buckets)) {
-          bucketsList.push(...g.buckets);
-        }
-      }
-    }
+      summaryJson.groups.forEach((g: any, gIdx: number) => {
+        const dName = String(g.displayName || g.display_name || '').toLowerCase();
+        const isGemini = dName.includes('gemini');
+        const isClaude = dName.includes('claude') || dName.includes('gpt');
 
-    for (const b of bucketsList) {
-      if (typeof b.remainingFraction === 'number' && Number.isFinite(b.remainingFraction)) {
-        const pct = toPct(b.remainingFraction);
-        if (mingguan_pct === null || pct < mingguan_pct) {
-          mingguan_pct = pct;
-          mingguan_resets_at = b.resetTime || null;
-        }
-      }
-    }
-  }
+        const buckets = Array.isArray(g.buckets) ? g.buckets : [];
+        buckets.forEach((b: any, bIdx: number) => {
+          const frac = b.remainingFraction ?? b.remaining_fraction;
+          if (typeof frac === 'number' && Number.isFinite(frac)) {
+            const pct = toPct(frac);
+            const resetTime = b.resetTime || b.reset_time || null;
+            const pathStr = `groups[${gIdx}].buckets[${bIdx}].${b.remainingFraction !== undefined ? 'remainingFraction' : 'remaining_fraction'}`;
 
-  // 2. Ambil per-model dari retrieveUserQuota
-  if (quotaJson && Array.isArray(quotaJson.buckets)) {
-    for (const b of quotaJson.buckets) {
-      if (typeof b.remainingFraction !== 'number' || !Number.isFinite(b.remainingFraction)) {
-        continue;
-      }
-
-      const modelId = String(b.modelId || '').toLowerCase();
-      const pct = toPct(b.remainingFraction);
-
-      if (modelId.includes('claude') || modelId.includes('opus') || modelId.includes('sonnet') || modelId.includes('gpt')) {
-        if (claude_pct === null || pct < claude_pct) {
-          claude_pct = pct;
-          claude_resets_at = b.resetTime || null;
-        }
-      } else if (modelId.includes('gemini') || modelId.includes('flash') || modelId.includes('pro')) {
-        if (gemini_pct === null || pct < gemini_pct) {
-          gemini_pct = pct;
-          gemini_resets_at = b.resetTime || null;
-        }
-      }
-    }
-  }
-
-  // 3. Fallback jika salah satu grup tidak ada di retrieveUserQuota, coba cari di groups retrieveUserQuotaSummary
-  if (summaryJson?.groups && Array.isArray(summaryJson.groups)) {
-    for (const g of summaryJson.groups) {
-      const dName = String(g.displayName || '').toLowerCase();
-      const isClaudeGroup = dName.includes('claude') || dName.includes('gpt');
-      const isGeminiGroup = dName.includes('gemini');
-
-      if ((isClaudeGroup && claude_pct === null) || (isGeminiGroup && gemini_pct === null)) {
-        for (const b of (g.buckets || [])) {
-          if (typeof b.remainingFraction === 'number' && Number.isFinite(b.remainingFraction)) {
-            const pct = toPct(b.remainingFraction);
-            if (isClaudeGroup && (claude_pct === null || pct < claude_pct)) {
-              claude_pct = pct;
-              claude_resets_at = b.resetTime || null;
-            }
-            if (isGeminiGroup && (gemini_pct === null || pct < gemini_pct)) {
-              gemini_pct = pct;
-              gemini_resets_at = b.resetTime || null;
+            if (isGemini) {
+              if (gemini_pct === null || pct < gemini_pct) {
+                gemini_pct = pct;
+                gemini_resets_at = resetTime;
+                gemini_source_path = pathStr;
+              }
+            } else if (isClaude) {
+              if (claude_pct === null || pct < claude_pct) {
+                claude_pct = pct;
+                claude_resets_at = resetTime;
+                claude_source_path = pathStr;
+              }
             }
           }
+        });
+      });
+    }
+
+    // 2. Fallback jika root memiliki array buckets (skema alternatif)
+    if (Array.isArray(summaryJson.buckets)) {
+      summaryJson.buckets.forEach((b: any, bIdx: number) => {
+        const frac = b.remainingFraction ?? b.remaining_fraction;
+        if (typeof frac === 'number' && Number.isFinite(frac)) {
+          const pct = toPct(frac);
+          const resetTime = b.resetTime || b.reset_time || null;
+          const pathStr = `buckets[${bIdx}].${b.remainingFraction !== undefined ? 'remainingFraction' : 'remaining_fraction'}`;
+          const bName = String(b.displayName || b.bucketId || b.bucket_id || '').toLowerCase();
+
+          if (bName.includes('gemini') && gemini_pct === null) {
+            gemini_pct = pct;
+            gemini_resets_at = resetTime;
+            gemini_source_path = pathStr;
+          } else if ((bName.includes('claude') || bName.includes('gpt') || bName.includes('3p')) && claude_pct === null) {
+            claude_pct = pct;
+            claude_resets_at = resetTime;
+            claude_source_path = pathStr;
+          }
         }
-      }
+      });
     }
   }
 
+  // Jika grup tidak ditemukan, larang nilai bawaan 100 atau 0
+  if (gemini_pct === null) {
+    gemini_reason = "Grup 'Gemini Models' tidak ditemukan di balasan retrieveUserQuotaSummary";
+  }
+  if (claude_pct === null) {
+    claude_reason = "Grup 'Claude and GPT models' tidak ditemukan di balasan retrieveUserQuotaSummary";
+  }
+
+  // Limit mingguan gabungan = nilai terendah dari grup mingguan yang ditemukan
+  const allVals: Array<number | null> = [gemini_pct, claude_pct];
+  const finiteVals = allVals.filter((v): v is number => typeof v === 'number' && Number.isFinite(v));
+  const mingguan_pct = finiteVals.length > 0 ? Math.min(...finiteVals) : null;
+  const mingguan_resets_at = (gemini_pct !== null && gemini_pct <= (claude_pct ?? Infinity))
+    ? gemini_resets_at
+    : claude_resets_at;
+
   return {
+    gemini: {
+      pct: gemini_pct,
+      resets_at: gemini_resets_at,
+      source_path: gemini_source_path,
+      reason: gemini_reason,
+    },
+    claude: {
+      pct: claude_pct,
+      resets_at: claude_resets_at,
+      source_path: claude_source_path,
+      reason: claude_reason,
+    },
     claude_pct,
     claude_resets_at,
+    claude_source_path,
+    claude_reason,
     gemini_pct,
     gemini_resets_at,
+    gemini_source_path,
+    gemini_reason,
     mingguan_pct,
     mingguan_resets_at,
   };
@@ -278,7 +313,7 @@ export async function fetchLiveQuota(email: string): Promise<RealQuotaResult> {
       headers: {
         'Authorization': `Bearer ${token}`,
         'Content-Type': 'application/json',
-        'User-Agent': 'antigravity/1.0.0',
+        'User-Agent': 'antigravity/1.107.0',
       },
       body: JSON.stringify(bodyObj),
     });
@@ -290,7 +325,7 @@ export async function fetchLiveQuota(email: string): Promise<RealQuotaResult> {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
-          'User-Agent': 'antigravity/1.0.0',
+          'User-Agent': 'antigravity/1.107.0',
         },
         body: JSON.stringify(bodyObj),
       });
@@ -306,35 +341,31 @@ export async function fetchLiveQuota(email: string): Promise<RealQuotaResult> {
   };
 
   let raw_summary: any = null;
-  let raw_quota: any = null;
 
   try {
-    // 1. Ambil retrieveUserQuotaSummary untuk limit mingguan
+    // Sumber tunggal kebenaran: retrieveUserQuotaSummary (sesuai halaman Models & Usage IDE Antigravity)
     const summaryRes = await postEndpoint(
       'https://cloudcode-pa.googleapis.com/v1internal:retrieveUserQuotaSummary',
       { project: projectId }
     );
     raw_summary = summaryRes.json || summaryRes.text;
 
-    // 2. Ambil retrieveUserQuota untuk per-model buckets
-    const quotaRes = await postEndpoint(
-      'https://cloudcode-pa.googleapis.com/v1internal:retrieveUserQuota',
-      { project: projectId }
-    );
-    raw_quota = quotaRes.json || quotaRes.text;
-
-    // 3. Parse dan normalisasi kuota
-    const parsed = parseQuotaResponses(summaryRes.json, quotaRes.json);
+    // Parse dan normalisasi kuota per grup (Gemini & Claude/GPT)
+    const parsed = parseQuotaResponses(summaryRes.json);
     const {
       claude_pct,
       claude_resets_at,
+      claude_source_path,
+      claude_reason,
       gemini_pct,
       gemini_resets_at,
+      gemini_source_path,
+      gemini_reason,
       mingguan_pct,
       mingguan_resets_at,
     } = parsed;
 
-    // 4. Jika ada setidaknya satu dimensi kuota yang terbaca
+    // Jika ada setidaknya satu dimensi kuota yang terbaca
     const hasData = Number.isFinite(claude_pct) || Number.isFinite(gemini_pct) || Number.isFinite(mingguan_pct);
 
     if (!hasData) {
@@ -343,14 +374,17 @@ export async function fetchLiveQuota(email: string): Promise<RealQuotaResult> {
         tier: 'free',
         claude_pct: null,
         claude_resets_at: null,
+        claude_source_path: null,
+        claude_reason,
         gemini_pct: null,
         gemini_resets_at: null,
+        gemini_source_path: null,
+        gemini_reason,
         mingguan_pct: null,
         mingguan_resets_at: null,
         raw_summary,
-        raw_quota,
         success: false,
-        error: 'Data kuota tidak ada atau tak terbaca dari server Google (retrieveUserQuotaSummary & retrieveUserQuota kosong/gagal).',
+        error: `Data kuota tidak ada atau tak terbaca dari retrieveUserQuotaSummary: ${gemini_reason || ''}; ${claude_reason || ''}`.trim(),
       };
     }
 
@@ -359,12 +393,15 @@ export async function fetchLiveQuota(email: string): Promise<RealQuotaResult> {
       tier: 'free',
       claude_pct,
       claude_resets_at,
+      claude_source_path,
+      claude_reason,
       gemini_pct,
       gemini_resets_at,
+      gemini_source_path,
+      gemini_reason,
       mingguan_pct,
       mingguan_resets_at,
       raw_summary,
-      raw_quota,
       success: true,
     };
   } catch (err: any) {
@@ -373,12 +410,13 @@ export async function fetchLiveQuota(email: string): Promise<RealQuotaResult> {
       tier: 'free',
       claude_pct: null,
       claude_resets_at: null,
+      claude_source_path: null,
       gemini_pct: null,
       gemini_resets_at: null,
+      gemini_source_path: null,
       mingguan_pct: null,
       mingguan_resets_at: null,
       raw_summary,
-      raw_quota,
       success: false,
       error: `Gagal memanggil API kuota: ${err.message}`,
     };

@@ -50,15 +50,22 @@ export async function GET() {
         is_active: acc.is_active,
         raw_outputs: {
           retrieveUserQuotaSummary: maskSensitive(live.raw_summary ?? null),
-          retrieveUserQuota: maskSensitive(live.raw_quota ?? null),
         },
         normalized_values: {
-          claude_pct: live.claude_pct,
-          claude_resets_at: live.claude_resets_at,
-          gemini_pct: live.gemini_pct,
-          gemini_resets_at: live.gemini_resets_at,
-          mingguan_pct: live.mingguan_pct,
-          mingguan_resets_at: live.mingguan_resets_at,
+          gemini: {
+            pct: live.gemini_pct,
+            resets_at: live.gemini_resets_at,
+            source_path: live.gemini_source_path ?? null,
+            status: live.gemini_pct !== null ? 'diketahui' : 'tidak_diketahui',
+            reason: live.gemini_reason ?? null,
+          },
+          claude: {
+            pct: live.claude_pct,
+            resets_at: live.claude_resets_at,
+            source_path: live.claude_source_path ?? null,
+            status: live.claude_pct !== null ? 'diketahui' : 'tidak_diketahui',
+            reason: live.claude_reason ?? null,
+          },
         },
         final: {
           lowest_pct: statusCalc.lowest_pct,

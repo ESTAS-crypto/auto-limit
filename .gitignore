@@ -4,6 +4,7 @@ out/
 build/
 dist/
 .env*.local
+.radar.pids
 .env
 !.env.example
 npm-debug.log*

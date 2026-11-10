@@ -239,49 +239,91 @@ describe('Unit Tests: Kriptografi AES-256-GCM (encrypt & decrypt)', () => {
 });
 
 describe('Unit Tests: Parser Balasan Asli Google Quota API (parseQuotaResponses)', () => {
-  // Payload asli dari server Google Cloud Code API untuk akun yang kena limit
-  const realLimitedQuotaPayload = {
-    buckets: [
-      { modelId: 'claude-opus-4-6-thinking', remainingFraction: 1, resetTime: '2026-11-16T05:59:37Z' },
-      { modelId: 'claude-sonnet-4-6', remainingFraction: 1, resetTime: '2026-11-16T05:59:37Z' },
-      { modelId: 'gemini-2.5-flash', remainingFraction: 0.0138672, resetTime: '2026-11-12T05:32:44Z' },
-      { modelId: 'gemini-2.5-pro', remainingFraction: 0.0138672, resetTime: '2026-11-12T05:32:44Z' },
-      { modelId: 'gemini-3-flash', remainingFraction: 0.0138672, resetTime: '2026-11-12T05:32:44Z' },
-      { modelId: 'gpt-oss-120b-medium', remainingFraction: 1, resetTime: '2026-11-16T05:59:37Z' },
-    ],
-  };
-
-  const realWeeklySummaryPayload = {
+  // Payload asli untuk akun claudeai259 sesuai tampilan IDE Antigravity (Gemini 33%, Claude/GPT 100%)
+  const realClaudeai259Payload = {
     groups: [
       {
+        displayName: 'Gemini Models',
+        description: 'Models within this group: Gemini 2.5 Flash, Gemini 2.5 Pro',
+        buckets: [
+          {
+            bucketId: 'gemini-weekly',
+            displayName: 'Weekly Limit Remaining',
+            window: 'weekly',
+            remainingFraction: 0.33,
+            resetTime: '2026-11-16T11:15:42Z',
+          },
+        ],
+      },
+      {
         displayName: 'Claude and GPT models',
+        description: 'Models within this group: Claude Opus, Claude Sonnet, GPT-OSS',
         buckets: [
           {
             bucketId: '3p-weekly',
             displayName: 'Weekly Limit Remaining',
             window: 'weekly',
-            remainingFraction: 1,
-            resetTime: '2026-11-16T05:59:36Z',
+            remainingFraction: 1.0,
+            resetTime: '2026-11-17T01:00:00Z',
           },
         ],
       },
     ],
   };
 
-  it('akun dengan fraksi Gemini habis (0.0138672) harus menghasilkan 0% dan status limit', () => {
-    const parsed = parseQuotaResponses(realWeeklySummaryPayload, realLimitedQuotaPayload);
+  it('akun claudeai259: Gemini harus 33, Claude dan GPT harus 100, dengan source_path yang tepat', () => {
+    const parsed = parseQuotaResponses(realClaudeai259Payload);
 
-    expect(parsed.gemini_pct).toBe(0); // fraksi < 0.02 dinormalisasi ke 0% (habis)
+    expect(parsed.gemini_pct).toBe(33);
+    expect(parsed.gemini_resets_at).toBe('2026-11-16T11:15:42Z');
+    expect(parsed.gemini_source_path).toBe('groups[0].buckets[0].remainingFraction');
+    expect(parsed.gemini.reason).toBeNull();
+
     expect(parsed.claude_pct).toBe(100);
-    expect(parsed.mingguan_pct).toBe(100);
-    expect(parsed.gemini_resets_at).toBe('2026-11-12T05:32:44Z');
+    expect(parsed.claude_resets_at).toBe('2026-11-17T01:00:00Z');
+    expect(parsed.claude_source_path).toBe('groups[1].buckets[0].remainingFraction');
+    expect(parsed.claude.reason).toBeNull();
+
+    // Limit mingguan keseluruhan diambil dari nilai terendah (33%)
+    expect(parsed.mingguan_pct).toBe(33);
+  });
+
+  it('akun kena limit mingguan (Gemini 0%, Claude 100% seperti evanatharasya) harus menghasilkan status limit', () => {
+    const limitedPayload = {
+      groups: [
+        {
+          displayName: 'Gemini Models',
+          buckets: [
+            {
+              bucketId: 'gemini-weekly',
+              remainingFraction: 0,
+              resetTime: '2026-11-16T11:15:42Z',
+            },
+          ],
+        },
+        {
+          displayName: 'Claude and GPT models',
+          buckets: [
+            {
+              bucketId: '3p-weekly',
+              remainingFraction: 1,
+              resetTime: '2026-11-17T01:00:00Z',
+            },
+          ],
+        },
+      ],
+    };
+
+    const parsed = parseQuotaResponses(limitedPayload);
+    expect(parsed.gemini_pct).toBe(0);
+    expect(parsed.claude_pct).toBe(100);
+    expect(parsed.mingguan_pct).toBe(0);
 
     const status = calculateAccountStatus({
       paused: false,
-      tracked_models: ['claude', 'gemini', 'mingguan'],
-      claude_pct: parsed.claude_pct,
+      tracked_models: ['gemini', 'claude'],
       gemini_pct: parsed.gemini_pct,
-      mingguan_pct: parsed.mingguan_pct,
+      claude_pct: parsed.claude_pct,
     });
 
     expect(status.status).toBe('limit');
@@ -290,99 +332,99 @@ describe('Unit Tests: Parser Balasan Asli Google Quota API (parseQuotaResponses)
   });
 
   it('akun sehat dengan remainingFraction 1 harus menghasilkan 100% dan status aktif', () => {
-    const healthyQuotaPayload = {
-      buckets: [
-        { modelId: 'claude-opus-4-6-thinking', remainingFraction: 1, resetTime: '2026-11-16T06:00:00Z' },
-        { modelId: 'gemini-2.5-pro', remainingFraction: 1, resetTime: '2026-11-16T06:00:00Z' },
-      ],
-    };
-    const healthySummaryPayload = {
+    const healthyPayload = {
       groups: [
         {
+          displayName: 'Gemini Models',
+          buckets: [{ remainingFraction: 1, resetTime: '2026-11-17T01:00:00Z' }],
+        },
+        {
           displayName: 'Claude and GPT models',
-          buckets: [{ remainingFraction: 1, resetTime: '2026-11-16T06:00:00Z' }],
+          buckets: [{ remainingFraction: 1, resetTime: '2026-11-17T01:00:00Z' }],
         },
       ],
     };
 
-    const parsed = parseQuotaResponses(healthySummaryPayload, healthyQuotaPayload);
-    expect(parsed.claude_pct).toBe(100);
+    const parsed = parseQuotaResponses(healthyPayload);
     expect(parsed.gemini_pct).toBe(100);
+    expect(parsed.claude_pct).toBe(100);
     expect(parsed.mingguan_pct).toBe(100);
 
     const status = calculateAccountStatus({
       paused: false,
-      tracked_models: ['claude', 'gemini', 'mingguan'],
-      claude_pct: parsed.claude_pct,
+      tracked_models: ['gemini', 'claude'],
       gemini_pct: parsed.gemini_pct,
-      mingguan_pct: parsed.mingguan_pct,
+      claude_pct: parsed.claude_pct,
     });
 
     expect(status.status).toBe('aktif');
     expect(status.lowest_pct).toBe(100);
-    expect(status.colorHex).toBe('#4ADE9A');
   });
 
-  it('akun yang limit pada dimensi mingguan (3p-weekly 0%) harus menghasilkan status limit', () => {
-    const weeklyExhaustedSummary = {
+  it('larang aturan pecahan di bawah 0.02: 0.0138672 dibulatkan wajar menjadi 1% (Math.round)', () => {
+    const fractionalPayload = {
       groups: [
         {
-          displayName: 'Weekly Limit',
-          buckets: [{ remainingFraction: 0, resetTime: '2026-11-16T06:00:00Z' }],
+          displayName: 'Gemini Models',
+          buckets: [{ remainingFraction: 0.0138672 }],
         },
       ],
     };
-    const healthyQuotaPayload = {
-      buckets: [
-        { modelId: 'claude-opus-4-6-thinking', remainingFraction: 1 },
-        { modelId: 'gemini-2.5-pro', remainingFraction: 1 },
+
+    const parsed = parseQuotaResponses(fractionalPayload);
+    // Tanpa aturan buatan < 0.02, 0.0138672 * 100 = 1.38 -> round = 1%
+    expect(parsed.gemini_pct).toBe(1);
+  });
+
+  it('grup tidak ditemukan harus bernilai null dengan alasan, jangan nilai bawaan 100 atau 0', () => {
+    // Hanya ada grup Claude
+    const singleGroupPayload = {
+      groups: [
+        {
+          displayName: 'Claude and GPT models',
+          buckets: [{ remainingFraction: 1 }],
+        },
       ],
     };
 
-    const parsed = parseQuotaResponses(weeklyExhaustedSummary, healthyQuotaPayload);
-    expect(parsed.mingguan_pct).toBe(0);
+    const parsed = parseQuotaResponses(singleGroupPayload);
     expect(parsed.claude_pct).toBe(100);
-    expect(parsed.gemini_pct).toBe(100);
+    expect(parsed.claude_reason).toBeNull();
 
-    const status = calculateAccountStatus({
-      paused: false,
-      tracked_models: ['claude', 'gemini', 'mingguan'],
-      claude_pct: parsed.claude_pct,
-      gemini_pct: parsed.gemini_pct,
-      mingguan_pct: parsed.mingguan_pct,
-    });
-
-    expect(status.status).toBe('limit');
-    expect(status.lowest_pct).toBe(0);
+    expect(parsed.gemini_pct).toBeNull();
+    expect(parsed.gemini_reason).toBe("Grup 'Gemini Models' tidak ditemukan di balasan retrieveUserQuotaSummary");
   });
 
-  it('multi-model: harus mengambil nilai terendah per grup, bukan nilai terakhir', () => {
-    const multiModelPayload = {
-      buckets: [
-        { modelId: 'gemini-2.5-flash', remainingFraction: 0.1 }, // 10%
-        { modelId: 'gemini-2.5-pro', remainingFraction: 0.9 },   // 90%
-        { modelId: 'claude-sonnet-4-6', remainingFraction: 0.8 }, // 80%
-        { modelId: 'claude-opus-4-6-thinking', remainingFraction: 0.3 }, // 30%
+  it('multi-bucket per grup: harus mengambil nilai terendah per grup', () => {
+    const multiBucketPayload = {
+      groups: [
+        {
+          displayName: 'Gemini Models',
+          buckets: [
+            { bucketId: 'b1', remainingFraction: 0.8 },
+            { bucketId: 'b2', remainingFraction: 0.25 },
+          ],
+        },
       ],
     };
 
-    const parsed = parseQuotaResponses(null, multiModelPayload);
-    expect(parsed.gemini_pct).toBe(10); // terendah antara 10% dan 90%
-    expect(parsed.claude_pct).toBe(30); // terendah antara 80% dan 30%
+    const parsed = parseQuotaResponses(multiBucketPayload);
+    expect(parsed.gemini_pct).toBe(25); // Math.round(0.25 * 100) = 25
   });
 
-  it('larang nilai bawaan 100: data tidak ada/rusak harus bernilai null dan status tidak_diketahui', () => {
-    const parsed = parseQuotaResponses(null, null);
+  it('larang nilai bawaan 100 saat balasan kosong/rusak', () => {
+    const parsed = parseQuotaResponses(null);
     expect(parsed.claude_pct).toBeNull();
     expect(parsed.gemini_pct).toBeNull();
     expect(parsed.mingguan_pct).toBeNull();
+    expect(parsed.gemini_reason).toContain('tidak ditemukan');
+    expect(parsed.claude_reason).toContain('tidak ditemukan');
 
     const status = calculateAccountStatus({
       paused: false,
-      tracked_models: ['claude', 'gemini', 'mingguan'],
+      tracked_models: ['claude', 'gemini'],
       claude_pct: parsed.claude_pct,
       gemini_pct: parsed.gemini_pct,
-      mingguan_pct: parsed.mingguan_pct,
     });
 
     expect(status.status).toBe('tidak_diketahui');

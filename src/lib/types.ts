@@ -99,10 +99,14 @@ export interface ProviderQuotaResult {
   tier: AccountTier;
   claude_pct: number | null;
   claude_resets_at: string | null;
+  claude_source_path?: string | null;
+  claude_reason?: string | null;
   gemini_pct: number | null;
   gemini_resets_at: string | null;
-  mingguan_pct: number | null;
-  mingguan_resets_at: string | null;
+  gemini_source_path?: string | null;
+  gemini_reason?: string | null;
+  mingguan_pct?: number | null;
+  mingguan_resets_at?: string | null;
   raw_summary?: any;
   raw_quota?: any;
   raw_models?: any;

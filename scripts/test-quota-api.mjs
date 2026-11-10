@@ -49,126 +49,104 @@ async function testQuotaApi() {
   }
 
   const projectId = auth.project_id || 'aicode-consumers';
-  const endpoints = [
-    {
-      name: 'retrieveUserQuotaSummary',
-      url: 'https://cloudcode-pa.googleapis.com/v1internal:retrieveUserQuotaSummary',
-      body: { project: projectId },
-    },
-    {
-      name: 'retrieveUserQuota',
-      url: 'https://cloudcode-pa.googleapis.com/v1internal:retrieveUserQuota',
-      body: { project: projectId },
-    },
-    {
-      name: 'fetchAvailableModels',
-      url: 'https://cloudcode-pa.googleapis.com/v1internal:fetchAvailableModels',
-      body: {},
-    },
-  ];
+  const url = 'https://cloudcode-pa.googleapis.com/v1internal:retrieveUserQuotaSummary';
+  let summary = null;
 
-  const results = {};
+  try {
+    let res = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+        'User-Agent': 'antigravity/1.107.0',
+      },
+      body: JSON.stringify({ project: projectId }),
+    });
 
-  for (const ep of endpoints) {
-    try {
-      let res = await fetch(ep.url, {
+    if (res.status === 401 && auth.refresh_token) {
+      token = await refreshAccessToken(auth.refresh_token);
+      res = await fetch(url, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
-          'User-Agent': 'antigravity/1.0.0',
+          'User-Agent': 'antigravity/1.107.0',
         },
-        body: JSON.stringify(ep.body),
+        body: JSON.stringify({ project: projectId }),
       });
-
-      if (res.status === 401 && auth.refresh_token) {
-        token = await refreshAccessToken(auth.refresh_token);
-        res = await fetch(ep.url, {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json',
-            'User-Agent': 'antigravity/1.0.0',
-          },
-          body: JSON.stringify(ep.body),
-        });
-      }
-
-      const text = await res.text();
-      try {
-        results[ep.name] = JSON.parse(text);
-      } catch {
-        results[ep.name] = null;
-      }
-    } catch (err) {
-      console.error(`Error pada ${ep.name}:`, err.message);
-      results[ep.name] = null;
     }
+
+    const text = await res.text();
+    try {
+      summary = JSON.parse(text);
+    } catch {
+      summary = text;
+    }
+  } catch (err) {
+    console.error('Error saat memanggil retrieveUserQuotaSummary:', err.message);
   }
 
   // Parse according to Quota Radar core logic
-  const toPct = (frac) => {
-    if (frac > 0 && frac < 0.02) return 0;
-    return Math.round(frac * 100);
-  };
+  const toPct = (frac) => Math.round(frac * 100);
 
-  let mingguan_pct = null;
-  let mingguan_resets_at = null;
-  let claude_pct = null;
-  let claude_resets_at = null;
   let gemini_pct = null;
   let gemini_resets_at = null;
+  let gemini_source_path = null;
+  let gemini_reason = null;
 
-  // 1. Weekly summary
-  const summary = results['retrieveUserQuotaSummary'];
-  if (summary) {
-    const bucketsList = [];
-    if (Array.isArray(summary.buckets)) bucketsList.push(...summary.buckets);
-    if (Array.isArray(summary.groups)) {
-      for (const g of summary.groups) {
-        if (Array.isArray(g.buckets)) bucketsList.push(...g.buckets);
-      }
-    }
-    for (const b of bucketsList) {
-      if (typeof b.remainingFraction === 'number' && Number.isFinite(b.remainingFraction)) {
-        const pct = toPct(b.remainingFraction);
-        if (mingguan_pct === null || pct < mingguan_pct) {
-          mingguan_pct = pct;
-          mingguan_resets_at = b.resetTime || null;
+  let claude_pct = null;
+  let claude_resets_at = null;
+  let claude_source_path = null;
+  let claude_reason = null;
+
+  if (summary && Array.isArray(summary.groups)) {
+    summary.groups.forEach((g, gIdx) => {
+      const dName = String(g.displayName || g.display_name || '').toLowerCase();
+      const isGemini = dName.includes('gemini');
+      const isClaude = dName.includes('claude') || dName.includes('gpt');
+
+      const buckets = Array.isArray(g.buckets) ? g.buckets : [];
+      buckets.forEach((b, bIdx) => {
+        const frac = b.remainingFraction ?? b.remaining_fraction;
+        if (typeof frac === 'number' && Number.isFinite(frac)) {
+          const pct = toPct(frac);
+          const resetTime = b.resetTime || b.reset_time || null;
+          const pathStr = `groups[${gIdx}].buckets[${bIdx}].${b.remainingFraction !== undefined ? 'remainingFraction' : 'remaining_fraction'}`;
+
+          if (isGemini) {
+            if (gemini_pct === null || pct < gemini_pct) {
+              gemini_pct = pct;
+              gemini_resets_at = resetTime;
+              gemini_source_path = pathStr;
+            }
+          } else if (isClaude) {
+            if (claude_pct === null || pct < claude_pct) {
+              claude_pct = pct;
+              claude_resets_at = resetTime;
+              claude_source_path = pathStr;
+            }
+          }
         }
-      }
-    }
+      });
+    });
   }
 
-  // 2. Per-model quota
-  const quota = results['retrieveUserQuota'];
-  if (quota && Array.isArray(quota.buckets)) {
-    for (const b of quota.buckets) {
-      if (typeof b.remainingFraction !== 'number' || !Number.isFinite(b.remainingFraction)) continue;
-      const modelId = String(b.modelId || '').toLowerCase();
-      const pct = toPct(b.remainingFraction);
-
-      if (modelId.includes('claude') || modelId.includes('opus') || modelId.includes('sonnet') || modelId.includes('gpt')) {
-        if (claude_pct === null || pct < claude_pct) {
-          claude_pct = pct;
-          claude_resets_at = b.resetTime || null;
-        }
-      } else if (modelId.includes('gemini') || modelId.includes('flash') || modelId.includes('pro')) {
-        if (gemini_pct === null || pct < gemini_pct) {
-          gemini_pct = pct;
-          gemini_resets_at = b.resetTime || null;
-        }
-      }
-    }
+  if (gemini_pct === null) {
+    gemini_reason = "Grup 'Gemini Models' tidak ditemukan di retrieveUserQuotaSummary";
   }
+  if (claude_pct === null) {
+    claude_reason = "Grup 'Claude and GPT models' tidak ditemukan di retrieveUserQuotaSummary";
+  }
+
+  console.log('\n=================== RAW RESPONSE ===================');
+  console.log(JSON.stringify(summary, null, 2));
 
   console.log('\n=================== HASIL NORMALISASI KUOTA ===================');
   console.log('Akun:', targetEmail);
-  console.log('Claude Opus :', claude_pct !== null ? `${claude_pct}% (reset: ${claude_resets_at})` : 'Tidak diketahui');
-  console.log('Gemini Pro  :', gemini_pct !== null ? `${gemini_pct}% (reset: ${gemini_resets_at})` : 'Tidak diketahui');
-  console.log('Mingguan    :', mingguan_pct !== null ? `${mingguan_pct}% (reset: ${mingguan_resets_at})` : 'Tidak diketahui');
+  console.log('Gemini (mingguan)        :', gemini_pct !== null ? `${gemini_pct}% (reset: ${gemini_resets_at}, path: ${gemini_source_path})` : `Tidak diketahui (${gemini_reason})`);
+  console.log('Claude dan GPT (mingguan):', claude_pct !== null ? `${claude_pct}% (reset: ${claude_resets_at}, path: ${claude_source_path})` : `Tidak diketahui (${claude_reason})`);
 
-  const finiteVals = [claude_pct, gemini_pct, mingguan_pct].filter(v => typeof v === 'number' && Number.isFinite(v));
+  const finiteVals = [gemini_pct, claude_pct].filter(v => typeof v === 'number' && Number.isFinite(v));
   const lowest = finiteVals.length > 0 ? Math.min(...finiteVals) : null;
   let status = 'tidak_diketahui';
   if (lowest !== null) {

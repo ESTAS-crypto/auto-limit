@@ -266,19 +266,14 @@ export default function DashboardPage() {
                       <Ring value={overallPct} size={64} />
                       <div className="flex-1 grid gap-2.5">
                         <QuotaBar
-                          label="Claude Opus"
-                          value={acc.claude_pct}
-                          resetText={formatResetTime(acc.claude_resets_at)}
-                        />
-                        <QuotaBar
-                          label="Gemini Pro"
+                          label="Gemini (mingguan)"
                           value={acc.gemini_pct}
                           resetText={formatResetTime(acc.gemini_resets_at)}
                         />
                         <QuotaBar
-                          label="Limit Mingguan"
-                          value={acc.mingguan_pct}
-                          resetText={formatResetTime(acc.mingguan_resets_at)}
+                          label="Claude dan GPT (mingguan)"
+                          value={acc.claude_pct}
+                          resetText={formatResetTime(acc.claude_resets_at)}
                         />
                       </div>
                     </div>
@@ -335,8 +330,7 @@ export default function DashboardPage() {
                     {recommended.email}
                   </div>
                   <div className="sub mt-0.5 capitalize">
-                    {recommended.tier} · Claude {recommended.claude_pct ?? '?'}% · Gemini{' '}
-                    {recommended.gemini_pct ?? '?'}% · Mingguan {recommended.mingguan_pct ?? '?'}%
+                    {recommended.tier} · Gemini (mingguan) {recommended.gemini_pct !== null && recommended.gemini_pct !== undefined ? `${recommended.gemini_pct}%` : '?'} · Claude dan GPT (mingguan) {recommended.claude_pct !== null && recommended.claude_pct !== undefined ? `${recommended.claude_pct}%` : '?'}
                   </div>
 
                   <div className="mt-5">

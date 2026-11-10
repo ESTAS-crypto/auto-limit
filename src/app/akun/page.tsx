@@ -176,19 +176,14 @@ export default function AkunPage() {
               <Ring value={selectedAccount.lowest_tracked_pct} size={72} />
               <div className="flex-1 space-y-2">
                 <QuotaBar
-                  label="Claude"
-                  value={selectedAccount.claude_pct}
-                  resetText={formatResetTime(selectedAccount.claude_resets_at)}
-                />
-                <QuotaBar
-                  label="Gemini"
+                  label="Gemini (mingguan)"
                   value={selectedAccount.gemini_pct}
                   resetText={formatResetTime(selectedAccount.gemini_resets_at)}
                 />
                 <QuotaBar
-                  label="Mingguan"
-                  value={selectedAccount.mingguan_pct}
-                  resetText={formatResetTime(selectedAccount.mingguan_resets_at)}
+                  label="Claude dan GPT (mingguan)"
+                  value={selectedAccount.claude_pct}
+                  resetText={formatResetTime(selectedAccount.claude_resets_at)}
                 />
               </div>
             </div>
@@ -230,9 +225,8 @@ export default function AkunPage() {
             <div className="tr th font-medium">
               <span>Akun</span>
               <span>Tier</span>
-              <span>Claude</span>
-              <span>Gemini</span>
-              <span>Mingguan</span>
+              <span>Gemini (mingguan)</span>
+              <span>Claude dan GPT (mingguan)</span>
               <span>Status</span>
               <span>Aksi</span>
             </div>
@@ -249,18 +243,13 @@ export default function AkunPage() {
                 </div>
                 <span className="sub capitalize">{acc.tier}</span>
                 <span className="mono text-sm">
-                  {acc.claude_pct !== null && acc.claude_pct !== undefined
-                    ? `${acc.claude_pct}%`
-                    : 'Tidak diketahui'}
-                </span>
-                <span className="mono text-sm">
                   {acc.gemini_pct !== null && acc.gemini_pct !== undefined
                     ? `${acc.gemini_pct}%`
                     : 'Tidak diketahui'}
                 </span>
                 <span className="mono text-sm">
-                  {acc.mingguan_pct !== null && acc.mingguan_pct !== undefined
-                    ? `${acc.mingguan_pct}%`
+                  {acc.claude_pct !== null && acc.claude_pct !== undefined
+                    ? `${acc.claude_pct}%`
                     : 'Tidak diketahui'}
                 </span>
                 <div>
@@ -319,22 +308,7 @@ export default function AkunPage() {
               <div className="space-y-4 mt-5">
                 <div>
                   <div className="flex justify-between text-xs mb-1.5">
-                    <span className="text-text font-medium">Claude Opus</span>
-                    <span className="mono text-radar-green font-bold">{editClaudePct}%</span>
-                  </div>
-                  <input
-                    type="range"
-                    min="0"
-                    max="100"
-                    value={editClaudePct}
-                    onChange={(e) => setEditClaudePct(parseInt(e.target.value, 10))}
-                    className="w-full accent-radar-green cursor-pointer"
-                  />
-                </div>
-
-                <div>
-                  <div className="flex justify-between text-xs mb-1.5">
-                    <span className="text-text font-medium">Gemini Pro</span>
+                    <span className="text-text font-medium">Gemini (mingguan)</span>
                     <span className="mono text-radar-green font-bold">{editGeminiPct}%</span>
                   </div>
                   <input
@@ -343,6 +317,21 @@ export default function AkunPage() {
                     max="100"
                     value={editGeminiPct}
                     onChange={(e) => setEditGeminiPct(parseInt(e.target.value, 10))}
+                    className="w-full accent-radar-green cursor-pointer"
+                  />
+                </div>
+
+                <div>
+                  <div className="flex justify-between text-xs mb-1.5">
+                    <span className="text-text font-medium">Claude dan GPT (mingguan)</span>
+                    <span className="mono text-radar-green font-bold">{editClaudePct}%</span>
+                  </div>
+                  <input
+                    type="range"
+                    min="0"
+                    max="100"
+                    value={editClaudePct}
+                    onChange={(e) => setEditClaudePct(parseInt(e.target.value, 10))}
                     className="w-full accent-radar-green cursor-pointer"
                   />
                 </div>
