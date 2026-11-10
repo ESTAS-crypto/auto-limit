@@ -2,7 +2,7 @@
  * src/lib/providers/ccs.ts
  * CcsProvider: Adapter untuk CCS (ccs agy).
  * Mengambil kuota asli langsung dari auth files CCS (~/.ccs/cliproxy/auth/)
- * dan Google Cloud Code internal API, dengan fallback ke `ccs agy --accounts`.
+ * dan Google Cloud Code internal API (retrieveUserQuotaSummary & retrieveUserQuota).
  */
 
 import fs from 'node:fs';
@@ -10,7 +10,7 @@ import path from 'node:path';
 import os from 'node:os';
 import { spawn } from 'node:child_process';
 import { ProviderQuotaResult, QuotaSemantics, AccountTier } from '../types';
-import { QuotaProvider, normalizeModelName, normalizePercent } from './types';
+import { QuotaProvider, normalizePercent } from './types';
 import { listCcsAuthFiles, fetchLiveQuota } from '../ccs-quota';
 
 export class CcsProvider implements QuotaProvider {
@@ -61,10 +61,28 @@ export class CcsProvider implements QuotaProvider {
             claude_resets_at: live.claude_resets_at,
             gemini_pct: live.gemini_pct,
             gemini_resets_at: live.gemini_resets_at,
+            mingguan_pct: live.mingguan_pct,
+            mingguan_resets_at: live.mingguan_resets_at,
+            raw_summary: live.raw_summary,
+            raw_quota: live.raw_quota,
             error: live.success ? undefined : live.error,
+            success: live.success,
           });
         } catch (err: any) {
           console.warn(`[CcsProvider] Gagal mengambil kuota live untuk ${email}:`, err.message);
+          results.push({
+            email,
+            nickname: email.split('@')[0],
+            tier: 'free',
+            claude_pct: null,
+            claude_resets_at: null,
+            gemini_pct: null,
+            gemini_resets_at: null,
+            mingguan_pct: null,
+            mingguan_resets_at: null,
+            error: err.message,
+            success: false,
+          });
         }
       }
 
@@ -73,7 +91,7 @@ export class CcsProvider implements QuotaProvider {
       }
     }
 
-    // 2. Fallback: Jalankan `ccs agy --accounts`
+    // 2. Fallback: Jalankan `ccs agy --accounts` bila auth file belum ada
     const ccsDir = this.getCcsHome();
     const accountsFile = path.join(ccsDir, 'cliproxy', 'accounts.json');
 
@@ -131,18 +149,25 @@ export class CcsProvider implements QuotaProvider {
           claude_resets_at: parsed.claude_resets_at,
           gemini_pct: parsed.gemini_pct,
           gemini_resets_at: parsed.gemini_resets_at,
+          mingguan_pct: null,
+          mingguan_resets_at: null,
           error: parsed.error,
+          success: true,
         });
       } else {
+        // Dilarang default 100: kembalikan null agar status menjadi tidak_diketahui
         results.push({
           email,
           nickname,
           tier,
-          claude_pct: 100,
+          claude_pct: null,
           claude_resets_at: null,
-          gemini_pct: 100,
+          gemini_pct: null,
           gemini_resets_at: null,
+          mingguan_pct: null,
+          mingguan_resets_at: null,
           error: 'Belum ada data kuota dari CCS (Hubungkan akun dengan Login Google)',
+          success: false,
         });
       }
     }
@@ -186,9 +211,9 @@ export class CcsProvider implements QuotaProvider {
     nickname: string,
     semantics: QuotaSemantics
   ): {
-    claude_pct: number;
+    claude_pct: number | null;
     claude_resets_at: string | null;
-    gemini_pct: number;
+    gemini_pct: number | null;
     gemini_resets_at: string | null;
     error?: string;
   } | null {
@@ -196,18 +221,18 @@ export class CcsProvider implements QuotaProvider {
 
     if (output.includes('403') || output.includes('Forbidden')) {
       return {
-        claude_pct: 0,
+        claude_pct: null,
         claude_resets_at: null,
-        gemini_pct: 0,
+        gemini_pct: null,
         gemini_resets_at: null,
         error: '403: Akun tidak punya akses kuota Antigravity',
       };
     }
     if (output.includes('Token expired') || output.includes('re-auth')) {
       return {
-        claude_pct: 0,
+        claude_pct: null,
         claude_resets_at: null,
-        gemini_pct: 0,
+        gemini_pct: null,
         gemini_resets_at: null,
         error: 'Token kedaluwarsa (login ulang lewat Login Google)',
       };
@@ -215,8 +240,8 @@ export class CcsProvider implements QuotaProvider {
 
     const lines = output.split('\n');
     let inAccountBlock = false;
-    let claudePct = 100;
-    let geminiPct = 100;
+    let claudePct: number | null = null;
+    let geminiPct: number | null = null;
     let claudeReset: string | null = null;
     let geminiReset: string | null = null;
     let found = false;
@@ -238,7 +263,10 @@ export class CcsProvider implements QuotaProvider {
         if (/claude|sonnet|opus/i.test(line)) {
           const pctMatch = line.match(/(\d+(?:\.\d+)?)%/);
           if (pctMatch) {
-            claudePct = normalizePercent(parseFloat(pctMatch[1]), semantics);
+            const val = normalizePercent(parseFloat(pctMatch[1]), semantics);
+            if (claudePct === null || val < claudePct) {
+              claudePct = val;
+            }
           }
           const resetMatch = line.match(/reset(?:\s+in)?\s+([^\n\r]+)/i);
           if (resetMatch) claudeReset = resetMatch[1].trim();
@@ -247,7 +275,10 @@ export class CcsProvider implements QuotaProvider {
         if (/gemini|flash|pro/i.test(line)) {
           const pctMatch = line.match(/(\d+(?:\.\d+)?)%/);
           if (pctMatch) {
-            geminiPct = normalizePercent(parseFloat(pctMatch[1]), semantics);
+            const val = normalizePercent(parseFloat(pctMatch[1]), semantics);
+            if (geminiPct === null || val < geminiPct) {
+              geminiPct = val;
+            }
           }
           const resetMatch = line.match(/reset(?:\s+in)?\s+([^\n\r]+)/i);
           if (resetMatch) geminiReset = resetMatch[1].trim();

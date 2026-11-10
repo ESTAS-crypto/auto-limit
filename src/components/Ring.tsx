@@ -1,7 +1,7 @@
 import React from 'react';
 
 interface RingProps {
-  value: number; // 0 to 100
+  value?: number | null; // 0 to 100, or null if unknown
   size?: number;
   strokeWidth?: number;
   className?: string;
@@ -13,12 +13,14 @@ export const Ring: React.FC<RingProps> = ({
   strokeWidth = 6,
   className = '',
 }) => {
-  const clamped = Math.max(0, Math.min(100, Math.round(value)));
+  const isKnown = typeof value === 'number' && Number.isFinite(value);
+  const clamped = isKnown ? Math.max(0, Math.min(100, Math.round(value!))) : 0;
   // Circumference for r=26 is ~163.36
-  const offset = 163.4 * (1 - clamped / 100);
+  const offset = isKnown ? 163.4 * (1 - clamped / 100) : 163.4;
 
   let color = '#4ADE9A';
-  if (clamped === 0) color = '#FF7A7A';
+  if (!isKnown) color = '#64748B';
+  else if (clamped === 0) color = '#FF7A7A';
   else if (clamped <= 20) color = '#F5B544';
 
   return (
@@ -34,7 +36,7 @@ export const Ring: React.FC<RingProps> = ({
         height={size}
         viewBox="0 0 64 64"
         role="img"
-        aria-label={`Sisa kuota ${clamped} persen`}
+        aria-label={isKnown ? `Sisa kuota ${clamped} persen` : 'Sisa kuota tidak diketahui'}
       >
         <circle className="track" cx="32" cy="32" r="26" strokeWidth={strokeWidth} />
         <circle
@@ -52,7 +54,7 @@ export const Ring: React.FC<RingProps> = ({
         />
       </svg>
       <b className="mono" style={{ fontSize: size <= 56 ? '13px' : '15px' }}>
-        {clamped}
+        {isKnown ? clamped : '?'}
       </b>
     </div>
   );

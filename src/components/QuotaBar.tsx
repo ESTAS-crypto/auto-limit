@@ -2,7 +2,7 @@ import React from 'react';
 
 interface QuotaBarProps {
   label: string;
-  value: number; // 0 to 100
+  value?: number | null; // 0 to 100, or null/undefined if unknown
   resetText?: string | null;
   className?: string;
 }
@@ -13,10 +13,12 @@ export const QuotaBar: React.FC<QuotaBarProps> = ({
   resetText,
   className = '',
 }) => {
-  const clamped = Math.max(0, Math.min(100, Math.round(value)));
+  const isKnown = typeof value === 'number' && Number.isFinite(value);
+  const clamped = isKnown ? Math.max(0, Math.min(100, Math.round(value!))) : 0;
 
   let color = '#4ADE9A';
-  if (clamped === 0) color = '#FF7A7A';
+  if (!isKnown) color = '#64748B';
+  else if (clamped === 0) color = '#FF7A7A';
   else if (clamped <= 20) color = '#F5B544';
 
   return (
@@ -24,7 +26,8 @@ export const QuotaBar: React.FC<QuotaBarProps> = ({
       <div className="flex justify-between text-[13px] text-muted">
         <span>{label}</span>
         <span className="mono">
-          {clamped}% {resetText ? `· reset ${resetText}` : ''}
+          {isKnown ? `${clamped}%` : 'Tidak diketahui'}
+          {isKnown && resetText ? ` · reset ${resetText}` : ''}
         </span>
       </div>
       <div className="bar">
@@ -32,7 +35,7 @@ export const QuotaBar: React.FC<QuotaBarProps> = ({
           className="fill"
           style={
             {
-              '--v': clamped,
+              '--v': isKnown ? clamped : 0,
               '--c': color,
             } as React.CSSProperties
           }

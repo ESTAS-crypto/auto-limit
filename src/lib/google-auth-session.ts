@@ -197,19 +197,31 @@ export async function checkGoogleOAuthStatus(): Promise<{
             accountId = saved.id;
           }
 
-          // Simpan snapshot kuota awal
-          await saveQuotaSnapshot({
-            account_id: accountId,
-            model: 'claude',
-            remaining_pct: liveData.claude_pct,
-            resets_at: liveData.claude_resets_at,
-          });
-          await saveQuotaSnapshot({
-            account_id: accountId,
-            model: 'gemini',
-            remaining_pct: liveData.gemini_pct,
-            resets_at: liveData.gemini_resets_at,
-          });
+          // Simpan snapshot kuota awal jika data ada
+          if (typeof liveData.claude_pct === 'number' && Number.isFinite(liveData.claude_pct)) {
+            await saveQuotaSnapshot({
+              account_id: accountId,
+              model: 'claude',
+              remaining_pct: liveData.claude_pct,
+              resets_at: liveData.claude_resets_at,
+            });
+          }
+          if (typeof liveData.gemini_pct === 'number' && Number.isFinite(liveData.gemini_pct)) {
+            await saveQuotaSnapshot({
+              account_id: accountId,
+              model: 'gemini',
+              remaining_pct: liveData.gemini_pct,
+              resets_at: liveData.gemini_resets_at,
+            });
+          }
+          if (typeof liveData.mingguan_pct === 'number' && Number.isFinite(liveData.mingguan_pct)) {
+            await saveQuotaSnapshot({
+              account_id: accountId,
+              model: 'mingguan',
+              remaining_pct: liveData.mingguan_pct,
+              resets_at: liveData.mingguan_resets_at,
+            });
+          }
 
           session.completed = true;
           session.result = liveData;

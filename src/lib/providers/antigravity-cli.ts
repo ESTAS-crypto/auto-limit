@@ -110,6 +110,21 @@ export function parseAntigravityCliOutput(
       }
     }
 
+    let mingguanPct: number | null = null;
+    let mingguanReset: string | null = null;
+    const weeklyLineMatch = block.match(/(?:weekly|mingguan)[^\n]*/i);
+    if (weeklyLineMatch) {
+      const line = weeklyLineMatch[0];
+      const pctMatch = line.match(/(\d+)%/);
+      if (pctMatch) {
+        mingguanPct = normalizePercent(parseInt(pctMatch[1], 10), semantics);
+      }
+      const resetMatch = line.match(/(?:reset[s]?\s*(?:at|in)?\s*|jam\s*)([0-9]{1,2}:[0-9]{2})/i);
+      if (resetMatch) {
+        mingguanReset = resetMatch[1];
+      }
+    }
+
     results.push({
       email,
       nickname,
@@ -118,6 +133,9 @@ export function parseAntigravityCliOutput(
       claude_resets_at: claudeReset,
       gemini_pct: geminiPct,
       gemini_resets_at: geminiReset,
+      mingguan_pct: mingguanPct,
+      mingguan_resets_at: mingguanReset,
+      success: true,
     });
   }
 

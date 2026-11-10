@@ -10,6 +10,7 @@ export interface StatusInput {
   tracked_models: TrackedModel[];
   claude_pct?: number | null;
   gemini_pct?: number | null;
+  mingguan_pct?: number | null;
   has_error?: boolean;
 }
 
@@ -41,14 +42,17 @@ export function calculateAccountStatus(input: StatusInput): StatusOutput {
     };
   }
 
-  const tracked = input.tracked_models || ['claude', 'gemini'];
+  const tracked = input.tracked_models || ['claude', 'gemini', 'mingguan'];
   const values: number[] = [];
 
-  if (tracked.includes('claude') && typeof input.claude_pct === 'number') {
-    values.push(input.claude_pct);
+  if (tracked.includes('claude') && Number.isFinite(input.claude_pct)) {
+    values.push(input.claude_pct!);
   }
-  if (tracked.includes('gemini') && typeof input.gemini_pct === 'number') {
-    values.push(input.gemini_pct);
+  if (tracked.includes('gemini') && Number.isFinite(input.gemini_pct)) {
+    values.push(input.gemini_pct!);
+  }
+  if (tracked.includes('mingguan') && Number.isFinite(input.mingguan_pct)) {
+    values.push(input.mingguan_pct!);
   }
 
   // Jika tidak ada data kuota sama sekali untuk model yang dipantau
@@ -131,4 +135,3 @@ export function formatRelativeTime(isoDate?: string | null): string {
     return isoDate;
   }
 }
-

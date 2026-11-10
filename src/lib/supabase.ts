@@ -19,7 +19,7 @@ import { calculateAccountStatus } from './status';
 
 // Cek apakah kredensial Supabase terkonfigurasi
 export function isSupabaseConfigured(): boolean {
-  if (process.env.DATABASE_URL && process.env.DATABASE_URL.includes('supabase.co')) {
+  if (process.env.DATABASE_URL && (process.env.DATABASE_URL.includes('supabase') || process.env.DATABASE_URL.includes('postgres'))) {
     return true;
   }
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -45,6 +45,7 @@ function getPool(): pg.Pool | null {
       ssl: { rejectUnauthorized: false },
       max: 5,
       idleTimeoutMillis: 30000,
+      connectionTimeoutMillis: 10000,
     });
   }
   return pool;
@@ -315,6 +316,8 @@ export async function getAccountsWithStatus(): Promise<AccountWithStatus[]> {
         claude_resets_at: row.claude_resets_at,
         gemini_pct: row.gemini_pct != null ? Number(row.gemini_pct) : null,
         gemini_resets_at: row.gemini_resets_at,
+        mingguan_pct: row.mingguan_pct != null ? Number(row.mingguan_pct) : null,
+        mingguan_resets_at: row.mingguan_resets_at,
         lowest_tracked_pct: row.lowest_tracked_pct != null ? Number(row.lowest_tracked_pct) : null,
         status: row.status,
         is_active: row.account_id === activeId,
@@ -345,6 +348,8 @@ export async function getAccountsWithStatus(): Promise<AccountWithStatus[]> {
           claude_resets_at: row.claude_resets_at,
           gemini_pct: row.gemini_pct != null ? Number(row.gemini_pct) : null,
           gemini_resets_at: row.gemini_resets_at,
+          mingguan_pct: row.mingguan_pct != null ? Number(row.mingguan_pct) : null,
+          mingguan_resets_at: row.mingguan_resets_at,
           lowest_tracked_pct: row.lowest_tracked_pct != null ? Number(row.lowest_tracked_pct) : null,
           status: row.status,
           is_active: row.account_id === activeId,
@@ -364,11 +369,16 @@ export async function getAccountsWithStatus(): Promise<AccountWithStatus[]> {
       .filter((s) => s.account_id === acc.id && s.model === 'gemini')
       .sort((a, b) => new Date(b.fetched_at).getTime() - new Date(a.fetched_at).getTime())[0];
 
+    const mingguanSnap = localDb.snapshots
+      .filter((s) => s.account_id === acc.id && s.model === 'mingguan')
+      .sort((a, b) => new Date(b.fetched_at).getTime() - new Date(a.fetched_at).getTime())[0];
+
     const statusCalc = calculateAccountStatus({
       paused: acc.paused,
       tracked_models: acc.tracked_models,
       claude_pct: claudeSnap?.remaining_pct,
       gemini_pct: geminiSnap?.remaining_pct,
+      mingguan_pct: mingguanSnap?.remaining_pct,
     });
 
     return {
@@ -377,6 +387,8 @@ export async function getAccountsWithStatus(): Promise<AccountWithStatus[]> {
       claude_resets_at: claudeSnap?.resets_at ?? null,
       gemini_pct: geminiSnap?.remaining_pct ?? null,
       gemini_resets_at: geminiSnap?.resets_at ?? null,
+      mingguan_pct: mingguanSnap?.remaining_pct ?? null,
+      mingguan_resets_at: mingguanSnap?.resets_at ?? null,
       lowest_tracked_pct: statusCalc.lowest_pct,
       status: statusCalc.status,
       is_active: acc.id === activeId,
@@ -673,27 +685,6 @@ export async function saveQuotaSnapshot(snapshot: Omit<QuotaSnapshot, 'id' | 'fe
   const pgPool = getPool();
   if (pgPool) {
     try {
-      // Proteksi limit mingguan: jika akun saat ini berstatus limit 0% dan waktu reset masih aktif,
-      // jangan izinkan false-positive 100% dari API menimpa kuota asli.
-      const existingRes = await pgPool.query(
-        `SELECT remaining_pct, resets_at FROM quota_snapshots 
-         WHERE account_id = $1 AND model = $2 
-         ORDER BY fetched_at DESC LIMIT 1;`,
-        [snapshot.account_id, snapshot.model]
-      );
-      if (existingRes.rows.length > 0) {
-        const last = existingRes.rows[0];
-        const lastPct = Number(last.remaining_pct);
-        const lastReset = last.resets_at ? new Date(last.resets_at).getTime() : 0;
-        if (lastPct === 0 && lastReset > Date.now() && snapshot.remaining_pct === 100) {
-          snapshot = {
-            ...snapshot,
-            remaining_pct: 0,
-            resets_at: last.resets_at,
-          };
-        }
-      }
-
       const { rows } = await pgPool.query(
         `INSERT INTO quota_snapshots (account_id, model, remaining_pct, resets_at)
          VALUES ($1, $2, $3, $4) RETURNING *;`,

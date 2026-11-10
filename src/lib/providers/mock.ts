@@ -29,6 +29,9 @@ export class MockProvider implements QuotaProvider {
         claude_resets_at: addMinutes(195), // 03:15
         gemini_pct: normalizePercent(100, quotaSemantics),
         gemini_resets_at: addMinutes(165), // 02:45
+        mingguan_pct: normalizePercent(100, quotaSemantics),
+        mingguan_resets_at: addMinutes(195),
+        success: true,
       },
       {
         email: 'akun-01@gmail.com',
@@ -38,6 +41,9 @@ export class MockProvider implements QuotaProvider {
         claude_resets_at: addMinutes(80), // 01:20
         gemini_pct: normalizePercent(95, quotaSemantics),
         gemini_resets_at: addMinutes(180), // 03:00
+        mingguan_pct: normalizePercent(90, quotaSemantics),
+        mingguan_resets_at: addMinutes(180),
+        success: true,
       },
       {
         email: 'akun-02@gmail.com',
@@ -47,6 +53,9 @@ export class MockProvider implements QuotaProvider {
         claude_resets_at: addMinutes(250), // 04:10
         gemini_pct: normalizePercent(70, quotaSemantics),
         gemini_resets_at: addMinutes(150), // 02:30
+        mingguan_pct: normalizePercent(65, quotaSemantics),
+        mingguan_resets_at: addMinutes(250),
+        success: true,
       },
       {
         email: 'akun-03@gmail.com',
@@ -56,6 +65,9 @@ export class MockProvider implements QuotaProvider {
         claude_resets_at: addMinutes(65), // 01:05
         gemini_pct: normalizePercent(38, quotaSemantics),
         gemini_resets_at: addMinutes(50), // 00:50
+        mingguan_pct: normalizePercent(20, quotaSemantics),
+        mingguan_resets_at: addMinutes(65),
+        success: true,
       },
       {
         email: 'akun-04@gmail.com',
@@ -65,6 +77,9 @@ export class MockProvider implements QuotaProvider {
         claude_resets_at: addMinutes(134), // 02:14
         gemini_pct: normalizePercent(55, quotaSemantics),
         gemini_resets_at: addMinutes(134), // 02:14
+        mingguan_pct: normalizePercent(0, quotaSemantics),
+        mingguan_resets_at: addMinutes(134),
+        success: true,
       },
       {
         email: 'akun-06@gmail.com',
@@ -74,6 +89,9 @@ export class MockProvider implements QuotaProvider {
         claude_resets_at: addMinutes(300), // 05:00
         gemini_pct: normalizePercent(0, quotaSemantics),
         gemini_resets_at: addMinutes(300), // 05:00
+        mingguan_pct: normalizePercent(0, quotaSemantics),
+        mingguan_resets_at: addMinutes(300),
+        success: true,
       },
     ];
 

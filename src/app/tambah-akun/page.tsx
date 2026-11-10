@@ -20,8 +20,9 @@ export default function TambahAkunPage() {
   const [email, setEmail] = useState('');
   const [nickname, setNickname] = useState('');
   const [tier, setTier] = useState<'ultra' | 'pro' | 'free'>('pro');
-  const [claudePct, setClaudePct] = useState(100);
-  const [geminiPct, setGeminiPct] = useState(100);
+  const [claudePct, setClaudePct] = useState<number | null>(null);
+  const [geminiPct, setGeminiPct] = useState<number | null>(null);
+  const [mingguanPct, setMingguanPct] = useState<number | null>(null);
   const [trackClaude, setTrackClaude] = useState(true);
   const [trackGemini, setTrackGemini] = useState(true);
   const [inRotation, setInRotation] = useState(true);
@@ -80,8 +81,9 @@ export default function TambahAkunPage() {
             setEmail(acc.email);
             setNickname(acc.email.split('@')[0]);
             setTier(acc.tier || 'pro');
-            setClaudePct(acc.claude_pct ?? 100);
-            setGeminiPct(acc.gemini_pct ?? 100);
+            setClaudePct(typeof acc.claude_pct === 'number' && Number.isFinite(acc.claude_pct) ? acc.claude_pct : null);
+            setGeminiPct(typeof acc.gemini_pct === 'number' && Number.isFinite(acc.gemini_pct) ? acc.gemini_pct : null);
+            setMingguanPct(typeof acc.mingguan_pct === 'number' && Number.isFinite(acc.mingguan_pct) ? acc.mingguan_pct : null);
 
             // Invalidate cache react-query
             queryClient.invalidateQueries({ queryKey: ['accounts'] });
@@ -493,84 +495,117 @@ export default function TambahAkunPage() {
         )}
 
         {/* Step 3: Kuota Pertama & Selesai */}
-        {step === 3 && (
-          <div className="two items-start">
-            <div className="card rise p-6 sm:p-7" style={{ '--i': 4 } as React.CSSProperties}>
-              <div className="flex justify-between items-center">
-                <div className="t font-mono text-base">{email}</div>
-                <StatusChip
-                  status={geminiPct === 0 || claudePct === 0 ? 'limit' : geminiPct <= 20 || claudePct <= 20 ? 'hampir_limit' : 'aktif'}
-                  label={geminiPct === 0 ? 'Gemini Limit Mingguan' : claudePct === 0 ? 'Claude Limit' : 'Terhubung Real'}
-                />
-              </div>
+        {step === 3 && (() => {
+          const finiteVals = [claudePct, geminiPct, mingguanPct].filter(
+            (v): v is number => typeof v === 'number' && Number.isFinite(v)
+          );
+          const lowestPct = finiteVals.length > 0 ? Math.min(...finiteVals) : null;
+          let statusBadge: 'aktif' | 'hampir_limit' | 'limit' | 'tidak_diketahui' = 'aktif';
+          let statusBadgeLabel = 'Terhubung Real';
 
-              <div className="grid grid-cols-2 gap-5 mt-6 text-center">
-                <div className="flex flex-col items-center gap-2">
-                  <Ring value={claudePct} size={110} strokeWidth={8} />
-                  <div className="t font-medium mt-1">Claude Opus</div>
-                  <div className="sub text-xs">{claudePct}% sisa real</div>
+          if (lowestPct === null) {
+            statusBadge = 'tidak_diketahui';
+            statusBadgeLabel = 'Tidak Diketahui';
+          } else if (lowestPct <= 15) {
+            statusBadge = 'limit';
+            if (geminiPct !== null && geminiPct <= 15) statusBadgeLabel = 'Gemini Limit Mingguan';
+            else if (mingguanPct !== null && mingguanPct <= 15) statusBadgeLabel = 'Limit Mingguan';
+            else if (claudePct !== null && claudePct <= 15) statusBadgeLabel = 'Claude Limit';
+            else statusBadgeLabel = 'Limit Tercapai';
+          } else if (lowestPct <= 25) {
+            statusBadge = 'hampir_limit';
+            statusBadgeLabel = 'Hampir Limit';
+          }
+
+          return (
+            <div className="two items-start">
+              <div className="card rise p-6 sm:p-7" style={{ '--i': 4 } as React.CSSProperties}>
+                <div className="flex justify-between items-center">
+                  <div className="t font-mono text-base">{email}</div>
+                  <StatusChip status={statusBadge} label={statusBadgeLabel} />
                 </div>
 
-                <div className="flex flex-col items-center gap-2">
-                  <Ring value={geminiPct} size={110} strokeWidth={8} />
-                  <div className="t font-medium mt-1">Gemini Pro</div>
-                  <div className="sub text-xs">{geminiPct}% sisa real</div>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-6 text-center">
+                  <div className="flex flex-col items-center gap-2 p-2 rounded-xl bg-surface/50">
+                    <Ring value={claudePct} size={90} strokeWidth={7} />
+                    <div className="t font-medium mt-1 text-sm">Claude Opus</div>
+                    <div className="sub text-xs">
+                      {claudePct !== null ? `${claudePct}% sisa real` : 'Tidak diketahui'}
+                    </div>
+                  </div>
+
+                  <div className="flex flex-col items-center gap-2 p-2 rounded-xl bg-surface/50">
+                    <Ring value={geminiPct} size={90} strokeWidth={7} />
+                    <div className="t font-medium mt-1 text-sm">Gemini Pro</div>
+                    <div className="sub text-xs">
+                      {geminiPct !== null ? `${geminiPct}% sisa real` : 'Tidak diketahui'}
+                    </div>
+                  </div>
+
+                  <div className="flex flex-col items-center gap-2 p-2 rounded-xl bg-surface/50">
+                    <Ring value={mingguanPct} size={90} strokeWidth={7} />
+                    <div className="t font-medium mt-1 text-sm">Limit Mingguan</div>
+                    <div className="sub text-xs">
+                      {mingguanPct !== null ? `${mingguanPct}% sisa real` : 'Tidak diketahui'}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex gap-3 mt-7 flex-wrap">
+                  <Link href="/" className="btn pri">
+                    <Icon name="radar" size={18} />
+                    <span>Buka Dashboard</span>
+                  </Link>
+                  <button
+                    className="btn"
+                    onClick={() => {
+                      setEmail('');
+                      setNickname('');
+                      setClaudePct(null);
+                      setGeminiPct(null);
+                      setMingguanPct(null);
+                      setStep(1);
+                    }}
+                  >
+                    <Icon name="plus" size={18} />
+                    <span>Tambah akun Google lain</span>
+                  </button>
                 </div>
               </div>
 
-              <div className="flex gap-3 mt-7 flex-wrap">
-                <Link href="/" className="btn pri">
-                  <Icon name="radar" size={18} />
-                  <span>Buka Dashboard</span>
-                </Link>
-                <button
-                  className="btn"
-                  onClick={() => {
-                    setEmail('');
-                    setNickname('');
-                    setClaudePct(100);
-                    setGeminiPct(100);
-                    setStep(1);
-                  }}
+              <div className="space-y-4">
+                <div
+                  className="card rise p-6 text-center flex flex-col items-center gap-2.5"
+                  style={{ '--i': 5 } as React.CSSProperties}
                 >
-                  <Icon name="plus" size={18} />
-                  <span>Tambah akun Google lain</span>
-                </button>
-              </div>
-            </div>
+                  <Blip mood={statusBadge === 'limit' ? 'tidur' : 'senang'} size={96} />
+                  <div className={`disp text-2xl font-bold tracking-tight ${statusBadge === 'limit' ? 'text-radar-red' : 'text-radar-green'}`}>
+                    {statusBadge === 'limit' ? 'Akun Terhubung (Limit Terdeteksi)' : 'Akun Berhasil Terhubung!'}
+                  </div>
+                  <div className="sub text-xs leading-relaxed">
+                    Data limit kuota {email} berhasil diverifikasi langsung dari server Google Cloud Code API. Radar akan memperbarui snapshot secara otomatis tiap 60 detik.
+                  </div>
+                </div>
 
-            <div className="space-y-4">
-              <div
-                className="card rise p-6 text-center flex flex-col items-center gap-2.5"
-                style={{ '--i': 5 } as React.CSSProperties}
-              >
-                <Blip mood="senang" size={96} />
-                <div className="disp text-2xl font-bold tracking-tight text-radar-green">
-                  Akun Berhasil Terhubung!
-                </div>
-                <div className="sub text-xs leading-relaxed">
-                  Data limit token {email} telah tercatat dan tersinkronisasi ke Google Antigravity. Anda dapat langsung memantau sisa kuota secara live di dashboard.
-                </div>
-              </div>
-
-              <div className="card rise p-5 sm:p-6 space-y-3" style={{ '--i': 6 } as React.CSSProperties}>
-                <div className="t font-medium">Fitur Aktif</div>
-                <div className="row2 text-xs">
-                  <Icon name="check" size={16} className="text-radar-green" />
-                  <span>Data tersimpan permanen di database Supabase Anda</span>
-                </div>
-                <div className="row2 text-xs">
-                  <Icon name="radar" size={16} className="text-radar-green" />
-                  <span>Monitoring otomatis tiap 60 detik</span>
-                </div>
-                <div className="row2 text-xs">
-                  <Icon name="loop" size={16} className="text-radar-green" />
-                  <span>Dukungan rotasi otomatis saat kuota menipis</span>
+                <div className="card rise p-5 sm:p-6 space-y-3" style={{ '--i': 6 } as React.CSSProperties}>
+                  <div className="t font-medium">Fitur Aktif</div>
+                  <div className="row2 text-xs">
+                    <Icon name="check" size={16} className="text-radar-green" />
+                    <span>Data tersimpan permanen di database Supabase Anda</span>
+                  </div>
+                  <div className="row2 text-xs">
+                    <Icon name="radar" size={16} className="text-radar-green" />
+                    <span>Monitoring live 3 dimensi: Claude, Gemini, & Mingguan</span>
+                  </div>
+                  <div className="row2 text-xs">
+                    <Icon name="loop" size={16} className="text-radar-green" />
+                    <span>Dukungan rotasi otomatis saat kuota menipis</span>
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
-        )}
+          );
+        })()}
       </div>
     </div>
   );

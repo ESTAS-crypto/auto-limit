@@ -264,16 +264,21 @@ export default function DashboardPage() {
 
                     <div className="flex gap-4 sm:gap-5 items-center mt-5">
                       <Ring value={overallPct} size={64} />
-                      <div className="flex-1 grid gap-3.5">
+                      <div className="flex-1 grid gap-2.5">
                         <QuotaBar
                           label="Claude Opus"
-                          value={acc.claude_pct ?? 0}
+                          value={acc.claude_pct}
                           resetText={formatResetTime(acc.claude_resets_at)}
                         />
                         <QuotaBar
                           label="Gemini Pro"
-                          value={acc.gemini_pct ?? 0}
+                          value={acc.gemini_pct}
                           resetText={formatResetTime(acc.gemini_resets_at)}
+                        />
+                        <QuotaBar
+                          label="Limit Mingguan"
+                          value={acc.mingguan_pct}
+                          resetText={formatResetTime(acc.mingguan_resets_at)}
                         />
                       </div>
                     </div>
@@ -330,8 +335,8 @@ export default function DashboardPage() {
                     {recommended.email}
                   </div>
                   <div className="sub mt-0.5 capitalize">
-                    {recommended.tier} · Claude {recommended.claude_pct ?? 0}% · Gemini{' '}
-                    {recommended.gemini_pct ?? 0}%
+                    {recommended.tier} · Claude {recommended.claude_pct ?? '?'}% · Gemini{' '}
+                    {recommended.gemini_pct ?? '?'}% · Mingguan {recommended.mingguan_pct ?? '?'}%
                   </div>
 
                   <div className="mt-5">

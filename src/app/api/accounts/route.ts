@@ -8,10 +8,11 @@ const createAccountSchema = z.object({
   nickname: z.string().min(1, 'Nama panggilan wajib diisi'),
   email: z.string().email('Format email tidak valid'),
   tier: z.enum(['ultra', 'pro', 'free']),
-  tracked_models: z.array(z.enum(['claude', 'gemini'])).min(1, 'Pilih minimal satu model'),
+  tracked_models: z.array(z.enum(['claude', 'gemini', 'mingguan'])).min(1, 'Pilih minimal satu model'),
   in_rotation: z.boolean().default(true),
   claude_pct: z.number().min(0).max(100).optional(),
   gemini_pct: z.number().min(0).max(100).optional(),
+  mingguan_pct: z.number().min(0).max(100).optional(),
 });
 
 export async function GET() {

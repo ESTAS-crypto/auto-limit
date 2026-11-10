@@ -173,17 +173,22 @@ export default function AkunPage() {
             </div>
 
             <div className="flex gap-4 items-center mt-3.5">
-              <Ring value={selectedAccount.lowest_tracked_pct ?? 0} size={72} />
+              <Ring value={selectedAccount.lowest_tracked_pct} size={72} />
               <div className="flex-1 space-y-2">
                 <QuotaBar
                   label="Claude"
-                  value={selectedAccount.claude_pct ?? 0}
+                  value={selectedAccount.claude_pct}
                   resetText={formatResetTime(selectedAccount.claude_resets_at)}
                 />
                 <QuotaBar
                   label="Gemini"
-                  value={selectedAccount.gemini_pct ?? 0}
+                  value={selectedAccount.gemini_pct}
                   resetText={formatResetTime(selectedAccount.gemini_resets_at)}
+                />
+                <QuotaBar
+                  label="Mingguan"
+                  value={selectedAccount.mingguan_pct}
+                  resetText={formatResetTime(selectedAccount.mingguan_resets_at)}
                 />
               </div>
             </div>
@@ -227,6 +232,7 @@ export default function AkunPage() {
               <span>Tier</span>
               <span>Claude</span>
               <span>Gemini</span>
+              <span>Mingguan</span>
               <span>Status</span>
               <span>Aksi</span>
             </div>
@@ -245,12 +251,17 @@ export default function AkunPage() {
                 <span className="mono text-sm">
                   {acc.claude_pct !== null && acc.claude_pct !== undefined
                     ? `${acc.claude_pct}%`
-                    : 'Habis'}
+                    : 'Tidak diketahui'}
                 </span>
                 <span className="mono text-sm">
                   {acc.gemini_pct !== null && acc.gemini_pct !== undefined
                     ? `${acc.gemini_pct}%`
-                    : 'Habis'}
+                    : 'Tidak diketahui'}
+                </span>
+                <span className="mono text-sm">
+                  {acc.mingguan_pct !== null && acc.mingguan_pct !== undefined
+                    ? `${acc.mingguan_pct}%`
+                    : 'Tidak diketahui'}
                 </span>
                 <div>
                   <StatusChip status={acc.status} />

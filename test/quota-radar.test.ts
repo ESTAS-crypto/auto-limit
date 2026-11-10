@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest';
 import { calculateAccountStatus } from '../src/lib/status';
 import { selectBestAccount } from '../src/lib/rotation';
 import { parseAntigravityCliOutput } from '../src/lib/providers/antigravity-cli';
+import { parseQuotaResponses } from '../src/lib/ccs-quota';
 import { encrypt, decrypt } from '../src/lib/crypto';
 import { AccountWithStatus } from '../src/lib/types';
 
@@ -234,6 +235,158 @@ describe('Unit Tests: Kriptografi AES-256-GCM (encrypt & decrypt)', () => {
 
     const decrypted = decrypt(encrypted);
     expect(decrypted).toBe(testSecret);
+  });
+});
+
+describe('Unit Tests: Parser Balasan Asli Google Quota API (parseQuotaResponses)', () => {
+  // Payload asli dari server Google Cloud Code API untuk akun yang kena limit
+  const realLimitedQuotaPayload = {
+    buckets: [
+      { modelId: 'claude-opus-4-6-thinking', remainingFraction: 1, resetTime: '2026-11-16T05:59:37Z' },
+      { modelId: 'claude-sonnet-4-6', remainingFraction: 1, resetTime: '2026-11-16T05:59:37Z' },
+      { modelId: 'gemini-2.5-flash', remainingFraction: 0.0138672, resetTime: '2026-11-12T05:32:44Z' },
+      { modelId: 'gemini-2.5-pro', remainingFraction: 0.0138672, resetTime: '2026-11-12T05:32:44Z' },
+      { modelId: 'gemini-3-flash', remainingFraction: 0.0138672, resetTime: '2026-11-12T05:32:44Z' },
+      { modelId: 'gpt-oss-120b-medium', remainingFraction: 1, resetTime: '2026-11-16T05:59:37Z' },
+    ],
+  };
+
+  const realWeeklySummaryPayload = {
+    groups: [
+      {
+        displayName: 'Claude and GPT models',
+        buckets: [
+          {
+            bucketId: '3p-weekly',
+            displayName: 'Weekly Limit Remaining',
+            window: 'weekly',
+            remainingFraction: 1,
+            resetTime: '2026-11-16T05:59:36Z',
+          },
+        ],
+      },
+    ],
+  };
+
+  it('akun dengan fraksi Gemini habis (0.0138672) harus menghasilkan 0% dan status limit', () => {
+    const parsed = parseQuotaResponses(realWeeklySummaryPayload, realLimitedQuotaPayload);
+
+    expect(parsed.gemini_pct).toBe(0); // fraksi < 0.02 dinormalisasi ke 0% (habis)
+    expect(parsed.claude_pct).toBe(100);
+    expect(parsed.mingguan_pct).toBe(100);
+    expect(parsed.gemini_resets_at).toBe('2026-11-12T05:32:44Z');
+
+    const status = calculateAccountStatus({
+      paused: false,
+      tracked_models: ['claude', 'gemini', 'mingguan'],
+      claude_pct: parsed.claude_pct,
+      gemini_pct: parsed.gemini_pct,
+      mingguan_pct: parsed.mingguan_pct,
+    });
+
+    expect(status.status).toBe('limit');
+    expect(status.lowest_pct).toBe(0);
+    expect(status.colorHex).toBe('#FF7A7A');
+  });
+
+  it('akun sehat dengan remainingFraction 1 harus menghasilkan 100% dan status aktif', () => {
+    const healthyQuotaPayload = {
+      buckets: [
+        { modelId: 'claude-opus-4-6-thinking', remainingFraction: 1, resetTime: '2026-11-16T06:00:00Z' },
+        { modelId: 'gemini-2.5-pro', remainingFraction: 1, resetTime: '2026-11-16T06:00:00Z' },
+      ],
+    };
+    const healthySummaryPayload = {
+      groups: [
+        {
+          displayName: 'Claude and GPT models',
+          buckets: [{ remainingFraction: 1, resetTime: '2026-11-16T06:00:00Z' }],
+        },
+      ],
+    };
+
+    const parsed = parseQuotaResponses(healthySummaryPayload, healthyQuotaPayload);
+    expect(parsed.claude_pct).toBe(100);
+    expect(parsed.gemini_pct).toBe(100);
+    expect(parsed.mingguan_pct).toBe(100);
+
+    const status = calculateAccountStatus({
+      paused: false,
+      tracked_models: ['claude', 'gemini', 'mingguan'],
+      claude_pct: parsed.claude_pct,
+      gemini_pct: parsed.gemini_pct,
+      mingguan_pct: parsed.mingguan_pct,
+    });
+
+    expect(status.status).toBe('aktif');
+    expect(status.lowest_pct).toBe(100);
+    expect(status.colorHex).toBe('#4ADE9A');
+  });
+
+  it('akun yang limit pada dimensi mingguan (3p-weekly 0%) harus menghasilkan status limit', () => {
+    const weeklyExhaustedSummary = {
+      groups: [
+        {
+          displayName: 'Weekly Limit',
+          buckets: [{ remainingFraction: 0, resetTime: '2026-11-16T06:00:00Z' }],
+        },
+      ],
+    };
+    const healthyQuotaPayload = {
+      buckets: [
+        { modelId: 'claude-opus-4-6-thinking', remainingFraction: 1 },
+        { modelId: 'gemini-2.5-pro', remainingFraction: 1 },
+      ],
+    };
+
+    const parsed = parseQuotaResponses(weeklyExhaustedSummary, healthyQuotaPayload);
+    expect(parsed.mingguan_pct).toBe(0);
+    expect(parsed.claude_pct).toBe(100);
+    expect(parsed.gemini_pct).toBe(100);
+
+    const status = calculateAccountStatus({
+      paused: false,
+      tracked_models: ['claude', 'gemini', 'mingguan'],
+      claude_pct: parsed.claude_pct,
+      gemini_pct: parsed.gemini_pct,
+      mingguan_pct: parsed.mingguan_pct,
+    });
+
+    expect(status.status).toBe('limit');
+    expect(status.lowest_pct).toBe(0);
+  });
+
+  it('multi-model: harus mengambil nilai terendah per grup, bukan nilai terakhir', () => {
+    const multiModelPayload = {
+      buckets: [
+        { modelId: 'gemini-2.5-flash', remainingFraction: 0.1 }, // 10%
+        { modelId: 'gemini-2.5-pro', remainingFraction: 0.9 },   // 90%
+        { modelId: 'claude-sonnet-4-6', remainingFraction: 0.8 }, // 80%
+        { modelId: 'claude-opus-4-6-thinking', remainingFraction: 0.3 }, // 30%
+      ],
+    };
+
+    const parsed = parseQuotaResponses(null, multiModelPayload);
+    expect(parsed.gemini_pct).toBe(10); // terendah antara 10% dan 90%
+    expect(parsed.claude_pct).toBe(30); // terendah antara 80% dan 30%
+  });
+
+  it('larang nilai bawaan 100: data tidak ada/rusak harus bernilai null dan status tidak_diketahui', () => {
+    const parsed = parseQuotaResponses(null, null);
+    expect(parsed.claude_pct).toBeNull();
+    expect(parsed.gemini_pct).toBeNull();
+    expect(parsed.mingguan_pct).toBeNull();
+
+    const status = calculateAccountStatus({
+      paused: false,
+      tracked_models: ['claude', 'gemini', 'mingguan'],
+      claude_pct: parsed.claude_pct,
+      gemini_pct: parsed.gemini_pct,
+      mingguan_pct: parsed.mingguan_pct,
+    });
+
+    expect(status.status).toBe('tidak_diketahui');
+    expect(status.lowest_pct).toBeNull();
   });
 });
 

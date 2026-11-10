@@ -4,7 +4,7 @@
  */
 
 export type AccountTier = 'ultra' | 'pro' | 'free';
-export type TrackedModel = 'claude' | 'gemini';
+export type TrackedModel = 'claude' | 'gemini' | 'mingguan';
 export type AccountStatusType = 'aktif' | 'hampir_limit' | 'limit' | 'dijeda' | 'tidak_diketahui';
 
 export interface Account {
@@ -33,8 +33,11 @@ export interface AccountWithStatus extends Account {
   claude_resets_at?: string | null;
   gemini_pct?: number | null;
   gemini_resets_at?: string | null;
+  mingguan_pct?: number | null;
+  mingguan_resets_at?: string | null;
   lowest_tracked_pct?: number | null;
   status: AccountStatusType;
+  status_reason?: string | null;
   is_active?: boolean;
 }
 
@@ -94,10 +97,15 @@ export interface ProviderQuotaResult {
   email: string;
   nickname?: string;
   tier: AccountTier;
-  claude_pct: number;
+  claude_pct: number | null;
   claude_resets_at: string | null;
-  gemini_pct: number;
+  gemini_pct: number | null;
   gemini_resets_at: string | null;
+  mingguan_pct: number | null;
+  mingguan_resets_at: string | null;
+  raw_summary?: any;
+  raw_quota?: any;
+  raw_models?: any;
   error?: string;
+  success: boolean;
 }
-
